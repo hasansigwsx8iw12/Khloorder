@@ -198,6 +198,7 @@ alert("تم حفظ الصيانة بنجاح");
 
 window.saveInstallation = async function(type){
 
+    alert("اشتغلت الدالة");
 
 await addDoc(
 
