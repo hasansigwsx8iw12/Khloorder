@@ -149,48 +149,30 @@ box.innerHTML="";
 
 window.saveMaintenance = async function(){
 
-await addDoc(
+try{
 
-collection(db,"maintenance"),
+console.log("DB:", db);
 
-{
+let result = await addDoc(
+    collection(db,"maintenance"),
+    {
+        test:"test",
+        date:new Date()
+    }
+);
 
-type:"صيانة",
+alert("نجح الحفظ ID: " + result.id);
 
-name:document.getElementById("name").value,
+}
+catch(e){
 
-national:document.getElementById("national").value,
+alert("خطأ: " + e.message);
 
-problem:document.getElementById("problem").value,
-
-dishSignal:
-document.getElementById("dishSignal")?.value || "",
-
-transfer:
-document.getElementById("transfer").value,
-
-tower:
-document.getElementById("tower").value,
-
-price:
-Number(document.getElementById("price").value),
-
-date:
-new Date().toLocaleDateString("ar"),
-
-createdAt:
-serverTimestamp()
+console.log(e);
 
 }
 
-);
-
-
-alert("تم حفظ الصيانة بنجاح");
-
-
 };
-
 // حفظ التركيبة والقلبة
 
 window.saveInstallation = async function(type){
