@@ -39,10 +39,9 @@ const app = initializeApp(firebaseConfig);
 
 // قاعدة البيانات
 
-const db = getFirestore(app);
-
-console.log("Firebase connected", db);
-
+const db = getFirestore(app, {
+  experimentalAutoDetectLongPolling: true
+});
 // تسجيل الدخول
 
 const auth = getAuth(app);
