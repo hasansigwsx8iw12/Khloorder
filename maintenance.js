@@ -1,3 +1,4 @@
+alert("تم تحميل maintenance.js");
 import { db } from "./firebase.js";
 
 import {
