@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>الحسابات - KHLLO NET</title>
+
+<link rel="stylesheet" href="style.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+</head>
+
+
+<body>
+
+
+<div class="sidebar">
+
+
+<div class="logo">
+
+<h2>KHLLO NET</h2>
+
+</div>
+
+
+<ul>
+
+
+<li>
+
+<a href="index.html">
+
+<i class="fa-solid fa-house"></i>
+
+الرئيسية
+
+</a>
+
+</li>
+
+
+<li>
+
+<a href="add.html">
+
+<i class="fa-solid fa-plus"></i>
+
+إضافة صيانة
+
+</a>
+
+</li>
+
+
+<li>
+
+<a href="repairs.html">
+
+<i class="fa-solid fa-screwdriver-wrench"></i>
+
+الصيانات
+
+</a>
+
+</li>
+
+
+<li>
+
+<a href="daily.html">
+
+<i class="fa-solid fa-calendar-days"></i>
+
+السجل اليومي
+
+</a>
+
+</li>
+
+
+<li class="active">
+
+<a href="accounts.html">
+
+<i class="fa-solid fa-wallet"></i>
+
+الحسابات
+
+</a>
+
+</li>
+
+
+<li>
+
+<a href="users.html">
+
+<i class="fa-solid fa-users"></i>
+
+المستخدمون
+
+</a>
+
+</li>
+
+
+</ul>
+
+
+</div>
+
+
+
+<div class="main">
+
+
+<header>
+
+<h1>
+
+الحسابات
+
+</h1>
+
+</header>
+
+
+
+<div class="cards">
+
+
+
+<div class="card">
+
+<i class="fa-solid fa-money-bill-wave"></i>
+
+<h3>
+دخل اليوم
+</h3>
+
+<h1 id="todayMoney">
+0
+</h1>
+
+
+</div>
+
+
+
+
+<div class="card">
+
+<i class="fa-solid fa-calendar"></i>
+
+<h3>
+دخل الشهر
+</h3>
+
+<h1 id="monthMoney">
+0
+</h1>
+
+
+</div>
+
+
+
+
+<div class="card">
+
+<i class="fa-solid fa-list"></i>
+
+<h3>
+عدد العمليات
+</h3>
+
+<h1 id="allCount">
+0
+</h1>
+
+
+</div>
+
+
+
+<div class="card">
+
+<i class="fa-solid fa-coins"></i>
+
+<h3>
+الإجمالي
+</h3>
+
+<h1 id="allMoney">
+0
+</h1>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+<div class="table-box">
+
+
+<h2>
+تفاصيل الحسابات
+</h2>
+
+
+<table>
+
+
+<thead>
+
+<tr>
+
+<th>
+النوع
+</th>
+
+
+<th>
+الاسم
+</th>
+
+
+<th>
+المبلغ
+</th>
+
+
+<th>
+التاريخ
+</th>
+
+
+</tr>
+
+
+</thead>
+
+
+
+<tbody id="accountTable">
+
+</tbody>
+
+
+
+</table>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+<script type="module" src="accounts.js"></script>
+<script type="module" src="protect.js"></script>
+
+</body>
+
+</html>
