@@ -150,33 +150,52 @@ box.innerHTML="";
 
 window.saveMaintenance = async function(){
 
-alert("بدأ الحفظ");
+try{
 
-try {
+await addDoc(
+collection(db,"maintenance"),
+{
+type:"صيانة",
 
-console.log("قبل addDoc");
+name:document.getElementById("name").value,
 
-const test = await addDoc(
-    collection(db,"maintenance"),
-    {
-        test:"hello",
-        createdAt:serverTimestamp()
-    }
+national:document.getElementById("national").value,
+
+problem:document.getElementById("problem").value,
+
+dishSignal:
+document.getElementById("dishSignal")?.value || "",
+
+transfer:
+document.getElementById("transfer").value,
+
+tower:
+document.getElementById("tower").value,
+
+price:
+Number(document.getElementById("price").value),
+
+date:
+new Date().toLocaleDateString("ar"),
+
+createdAt:
+serverTimestamp()
+}
 );
 
-console.log("بعد addDoc", test.id);
+alert("تم حفظ الصيانة بنجاح");
 
-alert("تم الحفظ بنجاح");
 
-} catch(error) {
+}catch(error){
 
-console.log("Firebase Error:", error);
+console.log(error);
 
 alert(error.message);
 
 }
 
 };
+
 // حفظ التركيبة والقلبة
 
 window.saveInstallation = async function(type){
