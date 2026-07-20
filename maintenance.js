@@ -150,26 +150,29 @@ box.innerHTML="";
 
 window.saveMaintenance = async function(){
 
-try{
+alert("بدأ الحفظ");
 
-console.log("DB:", db);
+try {
 
-let result = await addDoc(
+console.log("قبل addDoc");
+
+const test = await addDoc(
     collection(db,"maintenance"),
     {
-        test:"test",
-        date:new Date()
+        test:"hello",
+        createdAt:serverTimestamp()
     }
 );
 
-alert("نجح الحفظ ID: " + result.id);
+console.log("بعد addDoc", test.id);
 
-}
-catch(e){
+alert("تم الحفظ بنجاح");
 
-alert("خطأ: " + e.message);
+} catch(error) {
 
-console.log(e);
+console.log("Firebase Error:", error);
+
+alert(error.message);
 
 }
 
