@@ -5,7 +5,7 @@ import { initializeApp } from
 
 
 import { 
-getFirestore 
+initializeFirestore
 } from 
 "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -18,7 +18,7 @@ from
 
 
 
-// ضع بيانات مشروعك هنا
+// Firebase Config
 
 const firebaseConfig = {
   apiKey: "AIzaSyBJ2hF5xw9QF7KEmNi6Vseu_t_TEzoZz8M",
@@ -31,32 +31,25 @@ const firebaseConfig = {
 };
 
 
-
 // تشغيل Firebase
 
 const app = initializeApp(firebaseConfig);
 
 
-// قاعدة البيانات
-import { 
-getFirestore,
-initializeFirestore
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
+// Firestore
 
 const db = initializeFirestore(app, {
     experimentalForceLongPolling: true
 });
-// تسجيل الدخول
+
+
+// Auth
 
 const auth = getAuth(app);
 
 
 
 export {
-
-db,
-
-auth
-
+    db,
+    auth
 };
