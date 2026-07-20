@@ -151,20 +151,15 @@ window.saveMaintenance = async function(){
 
 alert("بدأ");
 
-try{
+try {
 
-const ref = await addDoc(
-    collection(db,"maintenance"),
-    {
-        test:"from website",
-    }
-);
+await fetch("https://firestore.googleapis.com");
 
-alert("نجح: " + ref.id);
+alert("الاتصال يعمل");
 
 }catch(e){
 
-alert("خطأ: " + e.message);
+alert("مشكلة اتصال");
 
 }
 
