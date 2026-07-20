@@ -38,9 +38,8 @@ const app = initializeApp(firebaseConfig);
 
 
 // قاعدة البيانات
-
 const db = getFirestore(app, {
-  experimentalAutoDetectLongPolling: true
+  experimentalForceLongPolling: true,
 });
 // تسجيل الدخول
 
