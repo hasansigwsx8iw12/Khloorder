@@ -148,47 +148,36 @@ box.innerHTML="";
 // حفظ الصيانة في Firebase
 
 window.saveMaintenance = async function(){
+window.saveMaintenance = async function(){
 
+try{
 
-await addDoc(
+    alert("اشتغلت الدالة");
 
-collection(db,"maintenance"),
+    await addDoc(
+        collection(db,"maintenance"),
+        {
+            type:"صيانة",
+            name:document.getElementById("name").value,
+            national:document.getElementById("national").value,
+            problem:document.getElementById("problem").value,
+            dishSignal:document.getElementById("dishSignal")?.value || "",
+            transfer:document.getElementById("transfer").value,
+            tower:document.getElementById("tower").value,
+            price:Number(document.getElementById("price").value),
+            date:new Date().toLocaleDateString("ar"),
+            createdAt:serverTimestamp()
+        }
+    );
 
-{
+    alert("تم الحفظ بنجاح");
 
-type:"صيانة",
+}catch(error){
 
-name:document.getElementById("name").value,
-
-national:document.getElementById("national").value,
-
-problem:document.getElementById("problem").value,
-
-dishSignal:
-document.getElementById("dishSignal")?.value || "",
-
-transfer:
-document.getElementById("transfer").value,
-
-tower:
-document.getElementById("tower").value,
-
-price:
-Number(document.getElementById("price").value),
-
-date:
-new Date().toLocaleDateString("ar"),
-
-createdAt:
-serverTimestamp()
+    alert(error.message);
+    console.error(error);
 
 }
-
-);
-
-
-alert("تم حفظ الصيانة بنجاح");
-
 
 };
 
