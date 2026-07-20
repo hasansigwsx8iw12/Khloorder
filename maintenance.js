@@ -188,7 +188,7 @@ alert("تم حفظ الصيانة بنجاح");
 
 }catch(error){
 
-console.log(error);
+alert("وصل للخطأ");
 
 alert(error.message);
 
