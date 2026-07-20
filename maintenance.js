@@ -148,7 +148,6 @@ box.innerHTML="";
 // حفظ الصيانة في Firebase
 
 window.saveMaintenance = async function(){
-window.saveMaintenance = async function(){
 
 try{
 
