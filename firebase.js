@@ -1,24 +1,12 @@
-// Firebase Imports
-
 import { initializeApp } from 
 "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-
-import { 
-initializeFirestore
-} from 
+import { getFirestore } from 
 "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-
-import {
-getAuth
-}
-from
+import { getAuth } from 
 "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-
-
-// Firebase Config
 
 const firebaseConfig = {
   apiKey: "AIzaSyBJ2hF5xw9QF7KEmNi6Vseu_t_TEzoZz8M",
@@ -31,25 +19,16 @@ const firebaseConfig = {
 };
 
 
-// تشغيل Firebase
-
 const app = initializeApp(firebaseConfig);
 
 
-// Firestore
+const db = getFirestore(app);
 
-const db = initializeFirestore(app, {
-    experimentalForceLongPolling: true
-});
-
-
-// Auth
 
 const auth = getAuth(app);
 
 
-
 export {
-    db,
-    auth
+db,
+auth
 };
