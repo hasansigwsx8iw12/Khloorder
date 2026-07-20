@@ -173,12 +173,11 @@ try{
 
 }catch(error){
 
-    alert(error.message);
-    console.error(error);
+    alert("خطأ: " + error.message);
+
+    console.log(error);
 
 }
-
-};
 
 
 
