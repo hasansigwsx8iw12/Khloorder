@@ -1,12 +1,14 @@
 alert("تم تحميل maintenance.js");
 
+
 import { db } from "./firebase.js";
 
+
 import {
-    collection,
-    addDoc,
-    serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    ref,
+    push,
+    set
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 
 
@@ -23,6 +25,7 @@ if(type === "maintenance"){
 box.innerHTML = `
 
 <h2>طلب صيانة</h2>
+
 
 <label>الاسم الثلاثي للزبون</label>
 <input id="name" type="text">
@@ -64,6 +67,7 @@ box.innerHTML = `
 `;
 
 document.getElementById("dishCheck").onchange = dishOption;
+
 
 document.getElementById("saveMaintenanceBtn").onclick = saveMaintenance;
 
@@ -117,7 +121,8 @@ box.innerHTML = `
 
 `;
 
-document.getElementById("saveInstallBtn").onclick = function(){
+
+document.getElementById("saveInstallBtn").onclick=function(){
 
 saveInstallation(title);
 
@@ -134,10 +139,12 @@ saveInstallation(title);
 
 function dishOption(){
 
+
 let box=document.getElementById("dishBox");
 
 
 if(document.getElementById("dishCheck").checked){
+
 
 box.innerHTML=`
 
@@ -146,11 +153,13 @@ box.innerHTML=`
 
 `;
 
+
 }else{
 
 box.innerHTML="";
 
 }
+
 
 }
 
@@ -161,17 +170,16 @@ box.innerHTML="";
 async function saveMaintenance(){
 
 
-alert("دخلت حفظ الصيانة");
-alert("قبل الإضافة");
+alert("بدأ الحفظ");
+
 
 try{
 
 
-await addDoc(
+let newRef = push(ref(db,"maintenance"));
 
-collection(db,"maintenance"),
 
-{
+await set(newRef,{
 
 type:"صيانة",
 
@@ -184,39 +192,37 @@ problem:document.getElementById("problem").value,
 dishSignal:
 document.getElementById("dishSignal")?.value || "",
 
+
 transfer:
 document.getElementById("transfer").value,
+
 
 tower:
 document.getElementById("tower").value,
 
+
 price:
 Number(document.getElementById("price").value),
+
 
 date:
 new Date().toLocaleDateString("ar"),
 
+
 createdAt:
-serverTimestamp()
+Date.now()
 
-}
-
-);
+});
 
 
 alert("تم حفظ الصيانة بنجاح");
 
 
-
 }catch(error){
 
-alert("حصل خطأ");
 
-alert(
-error.code + "\n" + error.message
-);
+alert(error.message);
 
-console.log(error);
 
 }
 
@@ -225,53 +231,4 @@ console.log(error);
 
 
 
-// حفظ التركيبة والقلبة
-
-async function saveInstallation(type){
-
-
-try{
-
-
-await addDoc(
-
-collection(db,"maintenance"),
-
-{
-
-type:type,
-
-name:document.getElementById("name").value,
-
-national:document.getElementById("national").value,
-
-speed:document.getElementById("speed").value,
-
-signal:document.getElementById("signal").value,
-
-price:Number(document.getElementById("price").value),
-
-tower:document.getElementById("tower").value,
-
-sector:document.getElementById("sector").value,
-
-date:new Date().toLocaleDateString("ar"),
-
-createdAt:serverTimestamp()
-
-}
-
-);
-
-
-alert("تم حفظ "+type+" بنجاح");
-
-
-}catch(error){
-
-alert("خطأ: "+error.message);
-
-}
-
-
-}
+//
