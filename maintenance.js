@@ -151,22 +151,22 @@ window.saveMaintenance = async function(){
 
 alert("بدأ");
 
-try{
+try {
 
-let response = await fetch(
-"https://firestore.googleapis.com/v1/projects/khlonetorder/databases/(default)/documents/maintenance"
+let test = await fetch(
+"https://www.googleapis.com/identitytoolkit/v3/relyingparty/getProjectConfig?key=AIzaSyBJ2hF5xw9QF7KEmNi6Vseu_t_TEzoZz8M"
 );
 
-alert("النتيجة: " + response.status);
+alert("اتصال Firebase: " + test.status);
 
+}
+catch(e){
 
-}catch(e){
-
-alert(e.message);
+alert("خطأ اتصال");
 
 }
 
-}
+};
 
 // حفظ التركيبة والقلبة
 
