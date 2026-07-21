@@ -4,11 +4,15 @@ import { initializeApp } from
 "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 
-import { initializeFirestore } from 
-"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { 
+getDatabase 
+} from 
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 
-import { getAuth } from 
+import { 
+getAuth 
+} from 
 "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 
@@ -35,36 +39,21 @@ const firebaseConfig = {
 
 
 
-// Initialize Firebase
-
 const app = initializeApp(firebaseConfig);
 
 
+// Realtime Database
 
-// Firestore
-
-const db = initializeFirestore(app, {
-
-    experimentalForceLongPolling: true,
-
-    useFetchStreams: false
-
-});
+const db = getDatabase(app);
 
 
-
-// Authentication
+// Auth
 
 const auth = getAuth(app);
 
 
 
-// Export
-
 export {
-
     db,
-
     auth
-
 };
