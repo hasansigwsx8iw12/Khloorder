@@ -147,27 +147,30 @@ box.innerHTML="";
 
 
 // حفظ الصيانة في Firebase
+
 window.saveMaintenance = async function(){
 
 alert("بدأ");
 
-try {
+try{
 
 let test = await fetch(
-"https://www.googleapis.com/identitytoolkit/v3/relyingparty/getProjectConfig?key=AIzaSyBJ2hF5xw9QF7KEmNi6Vseu_t_TEzoZz8M"
+"https://firestore.googleapis.com/v1/projects/khlonetorder/databases/(default)/documents/maintenance"
 );
 
-alert("اتصال Firebase: " + test.status);
+alert("النتيجة: " + test.status);
 
-}
-catch(e){
+let text = await test.text();
 
-alert("خطأ اتصال");
+alert(text);
+
+}catch(e){
+
+alert("خطأ: " + e.message);
 
 }
 
 };
-
 // حفظ التركيبة والقلبة
 
 window.saveInstallation = async function(type){
