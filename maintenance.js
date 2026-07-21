@@ -220,11 +220,13 @@ alert("تم حفظ الصيانة بنجاح");
 
 }catch(error){
 
+alert("الكود: " + error.code);
 
-alert(error.message);
+alert("الرسالة: " + error.message);
 
+console.log(error);
 
-}
+    }
 
 
 }
