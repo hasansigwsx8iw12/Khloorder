@@ -148,7 +148,7 @@ box.innerHTML="";
 
 // حفظ الصيانة في Firebase
 window.saveMaintenance = async function(){
-
+alert("دخلت حفظ الصيانة");
 try{
 
 await addDoc(
