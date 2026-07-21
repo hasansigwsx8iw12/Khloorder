@@ -45,7 +45,9 @@ const app = initializeApp(firebaseConfig);
 
 const db = initializeFirestore(app, {
 
-    experimentalForceLongPolling: true
+    experimentalForceLongPolling: true,
+
+    useFetchStreams: false
 
 });
 
