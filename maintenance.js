@@ -151,19 +151,23 @@ window.saveMaintenance = async function(){
 
 alert("بدأ");
 
-try {
+try{
 
-await fetch("https://firestore.googleapis.com");
+let response = await fetch(
+"https://firestore.googleapis.com/v1/projects/khlonetorder/databases/(default)/documents/maintenance"
+);
 
-alert("الاتصال يعمل");
+alert("النتيجة: " + response.status);
+
 
 }catch(e){
 
-alert("مشكلة اتصال");
+alert(e.message);
 
 }
 
-};
+}
+
 // حفظ التركيبة والقلبة
 
 window.saveInstallation = async function(type){
