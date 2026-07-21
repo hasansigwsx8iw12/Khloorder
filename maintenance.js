@@ -1,4 +1,5 @@
 alert("تم تحميل maintenance.js");
+
 import { db } from "./firebase.js";
 
 import {
@@ -6,6 +7,7 @@ import {
     addDoc,
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 
 
 // تغيير النموذج حسب الاختيار
@@ -22,7 +24,6 @@ box.innerHTML = `
 
 <h2>طلب صيانة</h2>
 
-
 <label>الاسم الثلاثي للزبون</label>
 <input id="name" type="text">
 
@@ -36,7 +37,7 @@ box.innerHTML = `
 
 
 <label>
-<input type="checkbox" id="dishCheck" onclick="dishOption()">
+<input type="checkbox" id="dishCheck">
 عيار الصحن
 </label>
 
@@ -56,11 +57,16 @@ box.innerHTML = `
 <input id="price" type="number">
 
 
-<button onclick="saveMaintenance()">
+<button id="saveMaintenanceBtn">
 حفظ الصيانة
 </button>
 
 `;
+
+document.getElementById("dishCheck").onchange = dishOption;
+
+document.getElementById("saveMaintenanceBtn").onclick = saveMaintenance;
+
 
 }
 
@@ -105,29 +111,33 @@ box.innerHTML = `
 <input id="sector" type="text">
 
 
-<button onclick="saveInstallation('${title}')">
+<button id="saveInstallBtn">
 حفظ ${title}
 </button>
 
 `;
 
-}
+document.getElementById("saveInstallBtn").onclick = function(){
 
+saveInstallation(title);
+
+};
+
+
+}
 
 };
 
 
 
-// إظهار خانة إشارة الصحن
+// خيار الصحن
 
-window.dishOption=function(){
-
-let check=document.getElementById("dishCheck");
+function dishOption(){
 
 let box=document.getElementById("dishBox");
 
 
-if(check.checked){
+if(document.getElementById("dishCheck").checked){
 
 box.innerHTML=`
 
@@ -142,48 +152,81 @@ box.innerHTML="";
 
 }
 
-};
+}
 
 
 
-// حفظ الصيانة في Firebase
-window.saveMaintenance = async function(){
+// حفظ الصيانة
+
+async function saveMaintenance(){
+
+
 alert("دخلت حفظ الصيانة");
+
+
 try{
 
+
 await addDoc(
-    collection(db,"maintenance"),
-    {
-        type:"صيانة",
-        name:document.getElementById("name").value,
-        national:document.getElementById("national").value,
-        problem:document.getElementById("problem").value,
-        dishSignal:document.getElementById("dishSignal")?.value || "",
-        transfer:document.getElementById("transfer").value,
-        tower:document.getElementById("tower").value,
-        price:Number(document.getElementById("price").value),
-        date:new Date().toLocaleDateString("ar"),
-        createdAt:serverTimestamp()
-    }
+
+collection(db,"maintenance"),
+
+{
+
+type:"صيانة",
+
+name:document.getElementById("name").value,
+
+national:document.getElementById("national").value,
+
+problem:document.getElementById("problem").value,
+
+dishSignal:
+document.getElementById("dishSignal")?.value || "",
+
+transfer:
+document.getElementById("transfer").value,
+
+tower:
+document.getElementById("tower").value,
+
+price:
+Number(document.getElementById("price").value),
+
+date:
+new Date().toLocaleDateString("ar"),
+
+createdAt:
+serverTimestamp()
+
+}
+
 );
+
 
 alert("تم حفظ الصيانة بنجاح");
 
+
 }catch(error){
 
-alert("خطأ: " + error.message);
+alert("خطأ: "+error.message);
 
 console.log(error);
 
 }
 
-};
+
+}
+
+
 
 // حفظ التركيبة والقلبة
 
-window.saveInstallation = async function(type){
+async function saveInstallation(type){
 
-    alert("اشتغلت الدالة");
+
+try{
+
 
 await addDoc(
 
@@ -216,7 +259,14 @@ createdAt:serverTimestamp()
 );
 
 
-alert("تم حفظ العملية بنجاح");
+alert("تم حفظ "+type+" بنجاح");
 
 
-};
+}catch(error){
+
+alert("خطأ: "+error.message);
+
+}
+
+
+}
