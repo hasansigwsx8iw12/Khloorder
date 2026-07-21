@@ -147,30 +147,38 @@ box.innerHTML="";
 
 
 // حفظ الصيانة في Firebase
-
 window.saveMaintenance = async function(){
-
-alert("بدأ");
 
 try{
 
-let test = await fetch(
-"https://firestore.googleapis.com/v1/projects/khlonetorder/databases/(default)/documents/maintenance"
+await addDoc(
+    collection(db,"maintenance"),
+    {
+        type:"صيانة",
+        name:document.getElementById("name").value,
+        national:document.getElementById("national").value,
+        problem:document.getElementById("problem").value,
+        dishSignal:document.getElementById("dishSignal")?.value || "",
+        transfer:document.getElementById("transfer").value,
+        tower:document.getElementById("tower").value,
+        price:Number(document.getElementById("price").value),
+        date:new Date().toLocaleDateString("ar"),
+        createdAt:serverTimestamp()
+    }
 );
 
-alert("النتيجة: " + test.status);
+alert("تم حفظ الصيانة بنجاح");
 
-let text = await test.text();
+}catch(error){
 
-alert(text);
+alert("خطأ: " + error.message);
 
-}catch(e){
-
-alert("خطأ: " + e.message);
+console.log(error);
 
 }
 
 };
+
 // حفظ التركيبة والقلبة
 
 window.saveInstallation = async function(type){
