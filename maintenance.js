@@ -162,7 +162,7 @@ async function saveMaintenance(){
 
 
 alert("دخلت حفظ الصيانة");
-
+alert("قبل الإضافة");
 
 try{
 
@@ -207,9 +207,14 @@ serverTimestamp()
 alert("تم حفظ الصيانة بنجاح");
 
 
+
 }catch(error){
 
-alert("خطأ: "+error.message);
+alert("حصل خطأ");
+
+alert(
+error.code + "\n" + error.message
+);
 
 console.log(error);
 
