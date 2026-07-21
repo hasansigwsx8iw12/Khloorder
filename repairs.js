@@ -2,48 +2,36 @@ import { db } from "./firebase.js";
 
 
 import {
-
-collection,
-
-getDocs,
-
-deleteDoc,
-
-doc,
-
-updateDoc
-
-}
-
-from
-
-"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    ref,
+    onValue,
+    remove,
+    update
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 
 
 let table = document.getElementById("dataTable");
 
 
-let allData=[];
+let allData = [];
 
 
 
-async function loadData(){
+
+// تحميل البيانات
+
+function loadData(){
+
+
+let dataRef = ref(db,"maintenance");
+
+
+onValue(dataRef,(snapshot)=>{
 
 
 table.innerHTML="";
 
-
-let snapshot = await getDocs(
-
-collection(db,"maintenance")
-
-);
-
-
-
 allData=[];
-
 
 
 snapshot.forEach((item)=>{
@@ -51,20 +39,27 @@ snapshot.forEach((item)=>{
 
 allData.push({
 
-id:item.id,
+id:item.key,
 
-data:item.data()
+data:item.val()
+
+});
+
 
 });
 
-
-});
 
 
 showData(allData);
 
 
+
+});
+
+
 }
+
+
 
 
 
@@ -73,6 +68,7 @@ function showData(data){
 
 
 table.innerHTML="";
+
 
 
 if(data.length===0){
@@ -98,6 +94,7 @@ return;
 
 
 
+
 data.forEach((item)=>{
 
 
@@ -105,7 +102,7 @@ let d=item.data;
 
 
 
-table.innerHTML +=`
+table.innerHTML += `
 
 <tr>
 
@@ -138,8 +135,11 @@ table.innerHTML +=`
 </button>
 
 
+
 <button 
+
 style="background:#e53935"
+
 onclick="deleteData('${item.id}')">
 
 حذف
@@ -154,6 +154,8 @@ onclick="deleteData('${item.id}')">
 
 `;
 
+
+
 });
 
 
@@ -162,7 +164,9 @@ onclick="deleteData('${item.id}')">
 
 
 
-// البحث بالاسم
+
+
+// البحث
 
 window.searchName=function(){
 
@@ -174,20 +178,23 @@ let value=document
 
 
 
-let result = allData.filter((item)=>{
+let result=allData.filter((item)=>{
 
 
-return item.data.name
-.includes(value);
+return item.data.name?.includes(value);
 
 
 });
 
 
+
 showData(result);
 
 
-}
+};
+
+
+
 
 
 
@@ -200,34 +207,34 @@ window.deleteData=async function(id){
 if(confirm("هل تريد حذف هذا الطلب؟")){
 
 
-await deleteDoc(
+await remove(
 
-doc(db,"maintenance",id)
+ref(db,"maintenance/"+id)
 
 );
-
 
 
 alert("تم الحذف");
 
 
-loadData();
-
-
-}
-
-
 }
 
 
 
+};
 
-// تعديل
+
+
+
+
+
+
+// تعديل الاسم
 
 window.editData=function(id){
 
 
-let item = allData.find(
+let item=allData.find(
 
 (x)=>x.id===id
 
@@ -235,13 +242,12 @@ let item = allData.find(
 
 
 
-let d=item.data;
+let newName=prompt(
 
-
-
-let newName = prompt(
 "تعديل الاسم",
-d.name
+
+item.data.name
+
 );
 
 
@@ -249,9 +255,9 @@ d.name
 if(newName){
 
 
-updateDoc(
+update(
 
-doc(db,"maintenance",id),
+ref(db,"maintenance/"+id),
 
 {
 
@@ -265,14 +271,12 @@ name:newName
 alert("تم التعديل");
 
 
-loadData();
-
-
 }
 
 
 
-}
+};
+
 
 
 
