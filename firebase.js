@@ -1,75 +1,56 @@
-import { auth, firestore } from "./firebase.js";
+// Firebase Imports
 
-import {
-    onAuthStateChanged,
-    signOut
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-import {
-    collection,
-    getDocs,
-    query,
-    where
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getDatabase } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 
-// التحقق من تسجيل الدخول
-onAuthStateChanged(auth, async (user) => {
+// Firebase Config
 
-    if (!user) {
-        window.location.href = "login.html";
-        return;
-    }
+const firebaseConfig = {
 
-    try {
+  apiKey: "AIzaSyBJ2hF5xw9QF7KEmNi6Vseu_t_TEzoZz8M",
 
-        const q = query(
-            collection(firestore, "users"),
-            where("email", "==", user.email)
-        );
+  authDomain: "khlonetorder.firebaseapp.com",
 
-        const result = await getDocs(q);
+  projectId: "khlonetorder",
 
-        if (result.empty) {
+  storageBucket: "khlonetorder.firebasestorage.app",
 
-            localStorage.setItem("userRole", "employee");
-            localStorage.setItem("userName", "غير معروف");
-            return;
+  messagingSenderId: "334428875974",
 
-        }
+  appId: "1:334428875974:web:b6acfc7782c541b6e3bbc7",
 
-        result.forEach((doc) => {
+  measurementId: "G-PXYS88ZM5T"
 
-            const data = doc.data();
-
-            localStorage.setItem("userRole", data.role || "employee");
-
-            // اسم المستخدم (الحقل عندك اسمه Name)
-            localStorage.setItem("userName", data.Name || "غير معروف");
-
-        });
-
-    } catch (error) {
-
-        console.log(error);
-
-        localStorage.setItem("userName", "غير معروف");
-
-    }
-
-});
+};
 
 
-// تسجيل الخروج
-window.logout = function () {
+const app = initializeApp(firebaseConfig);
 
-    signOut(auth).then(() => {
 
-        localStorage.removeItem("userRole");
-        localStorage.removeItem("userName");
+// Realtime Database
+const db = getDatabase(app);
 
-        window.location.href = "login.html";
 
-    });
+// Firestore
+const firestore = getFirestore(app);
+
+
+// Authentication
+const auth = getAuth(app);
+
+
+export {
+
+    db,
+
+    firestore,
+
+    auth
 
 };
