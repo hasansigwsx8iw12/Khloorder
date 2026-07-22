@@ -33,7 +33,7 @@ onAuthStateChanged(auth, async (user) => {
         if (result.empty) {
 
             localStorage.setItem("userRole", "employee");
-            localStorage.setItem("userName", "غير معروف");
+            localStorage.setItem("username", "غير معروف");
             return;
 
         }
@@ -45,7 +45,7 @@ onAuthStateChanged(auth, async (user) => {
             localStorage.setItem("userRole", data.role || "employee");
 
             // اسم المستخدم (الحقل عندك اسمه Name)
-            localStorage.setItem("userName", data.Name || "غير معروف");
+            localStorage.setItem("username", data.Name || "غير معروف");
 
         });
 
@@ -53,7 +53,7 @@ onAuthStateChanged(auth, async (user) => {
 
         console.log(error);
 
-        localStorage.setItem("userName", "غير معروف");
+        localStorage.setItem("username", "غير معروف");
 
     }
 
