@@ -7,25 +7,21 @@ import {
     update
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-let table = document.getElementById("dataTable");
+const table = document.getElementById("dataTable");
 let allData = [];
 
+// تحميل البيانات
 function loadData() {
 
-    let dataRef = ref(db, "maintenance");
+    onValue(ref(db, "maintenance"), (snapshot) => {
 
-    onValue(dataRef, (snapshot) => {
-
-        table.innerHTML = "";
         allData = [];
 
         snapshot.forEach((item) => {
-
             allData.push({
                 id: item.key,
                 data: item.val()
             });
-
         });
 
         showData(allData);
@@ -34,6 +30,7 @@ function loadData() {
 
 }
 
+// عرض البيانات
 function showData(data) {
 
     table.innerHTML = "";
@@ -51,16 +48,16 @@ function showData(data) {
 
     data.forEach((item) => {
 
-        let d = item.data;
+        const d = item.data;
 
         table.innerHTML += `
         <tr>
 
+            <td>${d.employee || "غير معروف"}</td>
+
             <td>${d.type || ""}</td>
 
             <td>${d.name || ""}</td>
-
-            <td>${d.employee || ""}</td>
 
             <td>${d.national || ""}</td>
 
@@ -71,7 +68,6 @@ function showData(data) {
             <td>${d.date || ""}</td>
 
             <td>
-
                 <button onclick="editData('${item.id}')">
                     تعديل
                 </button>
@@ -81,7 +77,6 @@ function showData(data) {
                     onclick="deleteData('${item.id}')">
                     حذف
                 </button>
-
             </td>
 
         </tr>
@@ -92,61 +87,53 @@ function showData(data) {
 }
 
 // البحث
-
 window.searchName = function () {
 
-    let value = document
+    const value = document
         .getElementById("searchName")
         .value
         .trim();
 
-    let result = allData.filter((item) => {
+    if (value === "") {
+        showData(allData);
+        return;
+    }
 
-        return item.data.name?.includes(value);
-
-    });
+    const result = allData.filter(item =>
+        (item.data.name || "").includes(value)
+    );
 
     showData(result);
 
 };
 
 // حذف
-
 window.deleteData = async function (id) {
 
-    if (confirm("هل تريد حذف هذا الطلب؟")) {
+    if (!confirm("هل تريد حذف هذا الطلب؟")) return;
 
-        await remove(ref(db, "maintenance/" + id));
+    await remove(ref(db, "maintenance/" + id));
 
-        alert("تم الحذف");
-
-    }
+    alert("تم الحذف");
 
 };
 
 // تعديل
+window.editData = async function (id) {
 
-window.editData = function (id) {
+    const item = allData.find(x => x.id === id);
 
-    let item = allData.find((x) => x.id === id);
+    if (!item) return;
 
-    let newName = prompt(
-        "تعديل الاسم",
-        item.data.name
-    );
+    const newName = prompt("تعديل الاسم", item.data.name);
 
-    if (newName) {
+    if (!newName) return;
 
-        update(
-            ref(db, "maintenance/" + id),
-            {
-                name: newName
-            }
-        );
+    await update(ref(db, "maintenance/" + id), {
+        name: newName
+    });
 
-        alert("تم التعديل");
-
-    }
+    alert("تم التعديل");
 
 };
 
