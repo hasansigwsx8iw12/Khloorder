@@ -1,6 +1,5 @@
 import { db } from "./firebase.js";
 
-
 import {
     ref,
     onValue,
@@ -8,277 +7,147 @@ import {
     update
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-
-
 let table = document.getElementById("dataTable");
-
-
 let allData = [];
 
+function loadData() {
 
+    let dataRef = ref(db, "maintenance");
 
+    onValue(dataRef, (snapshot) => {
 
-// تحميل البيانات
+        table.innerHTML = "";
+        allData = [];
 
-function loadData(){
+        snapshot.forEach((item) => {
 
+            allData.push({
+                id: item.key,
+                data: item.val()
+            });
 
-let dataRef = ref(db,"maintenance");
+        });
 
+        showData(allData);
 
-onValue(dataRef,(snapshot)=>{
-
-
-table.innerHTML="";
-
-allData=[];
-
-
-snapshot.forEach((item)=>{
-
-
-allData.push({
-
-id:item.key,
-
-data:item.val()
-
-});
-
-
-});
-
-
-
-showData(allData);
-
-
-
-});
-
+    });
 
 }
 
+function showData(data) {
 
+    table.innerHTML = "";
 
+    if (data.length === 0) {
 
+        table.innerHTML = `
+        <tr>
+            <td colspan="8">لا توجد بيانات</td>
+        </tr>
+        `;
 
+        return;
+    }
 
-function showData(data){
+    data.forEach((item) => {
 
+        let d = item.data;
 
-table.innerHTML="";
+        table.innerHTML += `
+        <tr>
 
+            <td>${d.type || ""}</td>
 
+            <td>${d.name || ""}</td>
 
-if(data.length===0){
+            <td>${d.employee || ""}</td>
 
+            <td>${d.national || ""}</td>
 
-table.innerHTML=`
+            <td>${d.tower || ""}</td>
 
-<tr>
+            <td>${d.price || 0}</td>
 
-<td colspan="7">
+            <td>${d.date || ""}</td>
 
-لا توجد بيانات
+            <td>
 
-</td>
+                <button onclick="editData('${item.id}')">
+                    تعديل
+                </button>
 
-</tr>
+                <button
+                    style="background:#e53935"
+                    onclick="deleteData('${item.id}')">
+                    حذف
+                </button>
 
-`;
+            </td>
 
-return;
+        </tr>
+        `;
+
+    });
 
 }
-
-
-
-
-data.forEach((item)=>{
-
-
-let d=item.data;
-
-
-
-table.innerHTML += `
-
-<tr>
-
-
-<td>${d.type || ""}</td>
-
-
-<td>${d.name || ""}</td>
-
-
-<td>${d.national || ""}</td>
-
-
-<td>${d.tower || ""}</td>
-
-
-<td>${d.price || 0}</td>
-
-
-<td>${d.date || ""}</td>
-
-
-<td>
-
-
-<button onclick="editData('${item.id}')">
-
-تعديل
-
-</button>
-
-
-
-<button 
-
-style="background:#e53935"
-
-onclick="deleteData('${item.id}')">
-
-حذف
-
-</button>
-
-
-</td>
-
-
-</tr>
-
-`;
-
-
-
-});
-
-
-}
-
-
-
-
-
 
 // البحث
 
-window.searchName=function(){
+window.searchName = function () {
 
+    let value = document
+        .getElementById("searchName")
+        .value
+        .trim();
 
-let value=document
-.getElementById("searchName")
-.value
-.trim();
+    let result = allData.filter((item) => {
 
+        return item.data.name?.includes(value);
 
+    });
 
-let result=allData.filter((item)=>{
-
-
-return item.data.name?.includes(value);
-
-
-});
-
-
-
-showData(result);
-
+    showData(result);
 
 };
-
-
-
-
-
-
 
 // حذف
 
-window.deleteData=async function(id){
+window.deleteData = async function (id) {
 
+    if (confirm("هل تريد حذف هذا الطلب؟")) {
 
-if(confirm("هل تريد حذف هذا الطلب؟")){
+        await remove(ref(db, "maintenance/" + id));
 
+        alert("تم الحذف");
 
-await remove(
-
-ref(db,"maintenance/"+id)
-
-);
-
-
-alert("تم الحذف");
-
-
-}
-
-
+    }
 
 };
 
+// تعديل
 
+window.editData = function (id) {
 
+    let item = allData.find((x) => x.id === id);
 
+    let newName = prompt(
+        "تعديل الاسم",
+        item.data.name
+    );
 
+    if (newName) {
 
+        update(
+            ref(db, "maintenance/" + id),
+            {
+                name: newName
+            }
+        );
 
-// تعديل الاسم
+        alert("تم التعديل");
 
-window.editData=function(id){
-
-
-let item=allData.find(
-
-(x)=>x.id===id
-
-);
-
-
-
-let newName=prompt(
-
-"تعديل الاسم",
-
-item.data.name
-
-);
-
-
-
-if(newName){
-
-
-update(
-
-ref(db,"maintenance/"+id),
-
-{
-
-name:newName
-
-}
-
-);
-
-
-alert("تم التعديل");
-
-
-}
-
-
+    }
 
 };
-
-
-
-
 
 loadData();
