@@ -17,7 +17,7 @@ import {
 onAuthStateChanged(auth, async (user) => {
 
     if (!user) {
-        window.location.href = "../login.html";
+        window.location.href = "login.html";
         return;
     }
 
@@ -68,7 +68,7 @@ window.logout = function () {
         localStorage.removeItem("userRole");
         localStorage.removeItem("userName");
 
-        window.location.href = "../login.html";
+        window.location.href = "login.html";
 
     });
 
