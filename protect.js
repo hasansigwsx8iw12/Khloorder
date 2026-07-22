@@ -24,19 +24,25 @@ onAuthStateChanged(auth, async (user) => {
     try {
 
         const q = query(
-            collection(firestore, "users"),
-            where("email", "==", user.email)
-        );
+    collection(firestore, "users"),
+    where("email", "==", user.email)
+);
 
-        const result = await getDocs(q);
+const result = await getDocs(q);
 
-        if (result.empty) {
+alert("عدد المستخدمين: " + result.size);
 
-            localStorage.setItem("userRole", "employee");
-            localStorage.setItem("username", "غير معروف");
-            return;
+result.forEach((doc)=>{
 
-        }
+    let data = doc.data();
+
+    alert(JSON.stringify(data));
+
+    localStorage.setItem("userRole", data.role || "employee");
+
+    localStorage.setItem("userName", data.Name || "غير معروف");
+
+});
 
         result.forEach((doc) => {
 
