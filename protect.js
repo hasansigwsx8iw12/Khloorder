@@ -1,4 +1,4 @@
-import { auth, db } from "./firebase.js";
+import { auth, firestore } from "./firebase.js";
 
 import {
     onAuthStateChanged,
@@ -13,44 +13,56 @@ import {
 
 
 
-// حماية الصفحة
-onAuthStateChanged(auth, async (user) => {
 
 
-    if (!user) {
+onAuthStateChanged(auth, async (user)=>{
 
-        window.location.href = "../login.html";
+
+    if(!user){
+
+
+        window.location.href="../login.html";
+
         return;
 
     }
 
 
 
-    try {
+    try{
 
 
-        // حفظ بيانات الحساب
-        localStorage.setItem("uid", user.uid);
-        localStorage.setItem("email", user.email);
-
-
-
-        // جلب بيانات الموظف
-        const employeeRef = doc(
-            db,
-            "employees",
+        localStorage.setItem(
+            "uid",
             user.uid
         );
 
 
-        const employeeSnap = await getDoc(employeeRef);
+        localStorage.setItem(
+            "email",
+            user.email
+        );
 
 
 
-        if(employeeSnap.exists()){
+
+        const employeeDoc = await getDoc(
+
+            doc(
+                firestore,
+                "employees",
+                user.uid
+            )
+
+        );
 
 
-            let data = employeeSnap.data();
+
+        if(employeeDoc.exists()){
+
+
+            let data = employeeDoc.data();
+
 
 
             localStorage.setItem(
@@ -59,36 +71,23 @@ onAuthStateChanged(auth, async (user) => {
             );
 
 
+
             localStorage.setItem(
                 "role",
                 data.role || "employee"
             );
 
 
-        }else{
-
-
-            localStorage.setItem(
-                "employeeName",
-                "غير معروف"
-            );
-
-
-            localStorage.setItem(
-                "role",
-                "employee"
-            );
-
 
         }
 
 
 
-    } catch(error){
+    }catch(error){
 
 
         console.log(
-            "خطأ في جلب بيانات الموظف:",
+            "خطأ:",
             error
         );
 
@@ -96,12 +95,13 @@ onAuthStateChanged(auth, async (user) => {
     }
 
 
+
 });
 
 
 
 
-// تسجيل الخروج
+
 window.logout = async function(){
 
 
