@@ -23,12 +23,15 @@
 
 <div class="sidebar">
 
+
 <div class="logo">
 <h2>KHLLO NET</h2>
 </div>
 
 
+
 <ul>
+
 
 <li>
 <a href="index.html">
@@ -36,6 +39,7 @@
 الرئيسية
 </a>
 </li>
+
 
 
 <li>
@@ -46,12 +50,14 @@
 </li>
 
 
+
 <li class="active">
 <a href="repairs.html">
 <i class="fa-solid fa-screwdriver-wrench"></i>
 الصيانات
 </a>
 </li>
+
 
 
 <li>
@@ -62,12 +68,14 @@
 </li>
 
 
+
 <li>
 <a href="accounts.html">
 <i class="fa-solid fa-wallet"></i>
 الحسابات
 </a>
 </li>
+
 
 
 <li>
@@ -78,10 +86,15 @@
 </li>
 
 
+
 </ul>
 
 
 </div>
+
+
+
+
 
 
 
@@ -98,6 +111,9 @@
 
 
 
+
+
+
 <div class="table-box">
 
 
@@ -105,32 +121,65 @@
 كل الطلبات
 </h2>
 
+
+
+
 <div style="margin-bottom:20px;">
 
+
 <input 
+
 id="searchName"
+
 type="text"
+
 placeholder="ابحث باسم الزبون..."
+
 onkeyup="searchName()"
+
 >
 
+
 </div>
+
+
+
+
+
+
+
+<div style="overflow-x:auto;">
+
 
 <table>
 
 
 <thead>
 
+
 <tr>
+
 <th>الموظف</th>
-  
+
 <th>النوع</th>
 
 <th>اسم الزبون</th>
 
 <th>الرقم الوطني</th>
 
+<th>المشكلة</th>
+
+<th>عيار الصحن</th>
+
+<th>النقل</th>
+
+<th>السرعة</th>
+
+<th>الإشارة</th>
+
 <th>البرج</th>
+
+<th>السكتور</th>
 
 <th>المبلغ</th>
 
@@ -138,9 +187,14 @@ onkeyup="searchName()"
 
 <th>إجراءات</th>
 
+
 </tr>
 
+
 </thead>
+
+
+
 
 
 
@@ -149,11 +203,16 @@ onkeyup="searchName()"
 
 <tr>
 
-<td colspan="6">
+
+<td colspan="14">
+
 جاري تحميل البيانات...
+
 </td>
 
+
 </tr>
+
 
 
 </tbody>
@@ -163,18 +222,31 @@ onkeyup="searchName()"
 </table>
 
 
+</div>
+
+
+
 
 </div>
 
 
+
 </div>
+
+
+
+
 
 
 
 
 <script type="module" src="repairs.js"></script>
+
 <script type="module" src="protect.js"></script>
 
+
+
 </body>
+
 
 </html>
