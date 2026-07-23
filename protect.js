@@ -1,4 +1,5 @@
-import { auth, firestore } from "./firebase.js";
+import { auth, db } from "./firebase.js";
+
 
 import {
     onAuthStateChanged,
@@ -7,9 +8,9 @@ import {
 
 
 import {
-    doc,
-    getDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    ref,
+    get
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 
 
@@ -29,8 +30,11 @@ onAuthStateChanged(auth, async (user)=>{
 
 
 
+
     try{
 
+
+        // حفظ بيانات الحساب
 
         localStorage.setItem(
             "uid",
@@ -45,23 +49,22 @@ onAuthStateChanged(auth, async (user)=>{
 
 
 
+        // جلب بيانات الموظف من Realtime Database
 
-        const employeeDoc = await getDoc(
-
-            doc(
-                firestore,
-                "employees",
-                user.uid
-            )
-
+        const employeeRef = ref(
+            db,
+            "employees/" + user.uid
         );
 
 
+        const snapshot = await get(employeeRef);
 
-        if(employeeDoc.exists()){
 
 
-            let data = employeeDoc.data();
+        if(snapshot.exists()){
+
+
+            const data = snapshot.val();
 
 
 
@@ -77,6 +80,21 @@ onAuthStateChanged(auth, async (user)=>{
                 data.role || "employee"
             );
 
+
+
+        }else{
+
+
+            localStorage.setItem(
+                "employeeName",
+                "غير معروف"
+            );
+
+
+            localStorage.setItem(
+                "role",
+                "employee"
+            );
 
 
         }
@@ -97,6 +115,9 @@ onAuthStateChanged(auth, async (user)=>{
 
 
 });
+
+
+
 
 
 
