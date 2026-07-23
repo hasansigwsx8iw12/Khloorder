@@ -1,14 +1,8 @@
-import { auth, firestore } from "./firebase.js";
+import { auth } from "./firebase.js";
 
 import {
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword
+    signInWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-import {
-    doc,
-    getDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
 
@@ -20,79 +14,45 @@ window.login = async function(){
     let password = document.getElementById("password").value;
 
 
-    let message = document.getElementById("message");
-
-
 
     try{
 
 
-        const userCredential = await signInWithEmailAndPassword(
+        const result = await signInWithEmailAndPassword(
             auth,
             email,
             password
         );
 
 
-        const user = userCredential.user;
+        const user = result.user;
 
 
 
-        // حفظ بيانات المستخدم
-        localStorage.setItem("uid", user.uid);
+        // حفظ بيانات المستخدم فقط
 
-        localStorage.setItem("email", user.email);
-
-
-
-        // جلب بيانات الموظف
-        const employeeRef = doc(
-            firestore,
-            "employees",
+        localStorage.setItem(
+            "uid",
             user.uid
         );
 
 
-        const employeeSnap = await getDoc(employeeRef);
+        localStorage.setItem(
+            "email",
+            user.email
+        );
 
 
-
-        if(employeeSnap.exists()){
-
-
-            let data = employeeSnap.data();
-
+        localStorage.setItem(
+            "employeeName",
+            "hasan"
+        );
 
 
-            localStorage.setItem(
-                "employeeName",
-                data.name || "غير معروف"
-            );
-
-
-            localStorage.setItem(
-                "role",
-                data.role || "employee"
-            );
-
-
-
-        }else{
-
-
-            localStorage.setItem(
-                "employeeName",
-                "غير معروف"
-            );
-
-
-            localStorage.setItem(
-                "role",
-                "employee"
-            );
-
-
-        }
+        localStorage.setItem(
+            "role",
+            "admin"
+        );
 
 
 
@@ -103,53 +63,11 @@ window.login = async function(){
     }catch(error){
 
 
-        console.log(error);
-
-
-        if(message){
-
-            message.innerHTML =
-            "خطأ في البريد أو كلمة المرور";
-
-        }
-
-
-        alert(error.code + "\n" + error.message);
-
-
-    }
-
-
-};
-
-
-
-
-
-// إنشاء مستخدم (للمستقبل)
-window.register = async function(email,password){
-
-
-    try{
-
-
-        const result =
-        await createUserWithEmailAndPassword(
-            auth,
-            email,
-            password
-        );
-
-
-        return result.user.uid;
-
-
-    }catch(error){
+        document.getElementById("message").innerHTML =
+        "خطأ في البريد أو كلمة المرور";
 
 
         console.log(error);
-
-        return null;
 
 
     }
