@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Developer Panel - KHLLO NET</title>
+
+<link rel="stylesheet" href="style.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+
+<style>
+
+
+.dev-box{
+
+background:#111827;
+
+padding:30px;
+
+border-radius:20px;
+
+margin-top:30px;
+
+}
+
+
+
+.dev-title{
+
+text-align:center;
+
+margin-bottom:30px;
+
+}
+
+
+.dev-title i{
+
+font-size:60px;
+
+color:#22c55e;
+
+}
+
+
+.dev-title h1{
+
+color:white;
+
+font-size:32px;
+
+margin-top:15px;
+
+}
+
+
+
+.cards{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+
+gap:20px;
+
+}
+
+
+
+.card{
+
+background:#1e293b;
+
+padding:25px;
+
+border-radius:15px;
+
+text-align:center;
+
+color:white;
+
+transition:.3s;
+
+cursor:pointer;
+
+}
+
+
+
+.card:hover{
+
+transform:translateY(-8px);
+
+background:#334155;
+
+}
+
+
+
+.card i{
+
+font-size:40px;
+
+color:#38bdf8;
+
+margin-bottom:15px;
+
+}
+
+
+
+.card h3{
+
+margin:10px 0;
+
+}
+
+
+
+.card p{
+
+color:#cbd5e1;
+
+font-size:14px;
+
+}
+
+
+
+.warning{
+
+margin-top:30px;
+
+background:#422006;
+
+color:#facc15;
+
+padding:15px;
+
+border-radius:12px;
+
+text-align:center;
+
+}
+
+
+</style>
+
+
+</head>
+
+
+<body>
+
+
+
+<div class="sidebar">
+
+
+<div class="logo">
+
+<h2>KHLLO NET</h2>
+
+</div>
+
+
+
+<ul>
+
+
+<li>
+<a href="index.html">
+<i class="fa-solid fa-house"></i>
+الرئيسية
+</a>
+</li>
+
+
+<li>
+<a href="add.html">
+<i class="fa-solid fa-plus"></i>
+إضافة صيانة
+</a>
+</li>
+
+
+<li>
+<a href="repairs.html">
+<i class="fa-solid fa-screwdriver-wrench"></i>
+الصيانات
+</a>
+</li>
+
+
+<li>
+<a href="daily.html">
+<i class="fa-solid fa-calendar-days"></i>
+السجل اليومي
+</a>
+</li>
+
+
+<li>
+<a href="accounts.html">
+<i class="fa-solid fa-wallet"></i>
+الحسابات
+</a>
+</li>
+
+
+
+<li>
+<a href="users.html">
+<i class="fa-solid fa-users"></i>
+المستخدمون
+</a>
+</li>
+
+
+<li class="active">
+
+<a href="developer.html">
+
+<i class="fa-solid fa-code"></i>
+
+المطور
+
+</a>
+
+</li>
+
+
+</ul>
+
+
+</div>
+
+
+
+
+
+
+
+<div class="main">
+
+
+
+<header>
+
+<h1>
+Developer Panel
+</h1>
+
+</header>
+
+
+
+
+
+
+<div class="dev-box">
+
+
+
+<div class="dev-title">
+
+<i class="fa-solid fa-user-shield"></i>
+
+
+<h1>
+قائمة المطور
+</h1>
+
+
+</div>
+
+
+
+
+
+<div class="cards">
+
+
+
+
+
+<div class="card">
+
+<i class="fa-solid fa-users-gear"></i>
+
+<h3>
+إدارة الموظفين
+</h3>
+
+<p>
+إضافة وحذف وتعديل الموظفين والصلاحيات
+</p>
+
+</div>
+
+
+
+
+
+
+
+<div class="card">
+
+<i class="fa-solid fa-database"></i>
+
+<h3>
+قاعدة البيانات
+</h3>
+
+<p>
+إدارة Firebase والبيانات
+</p>
+
+</div>
+
+
+
+
+
+
+
+<div class="card">
+
+<i class="fa-solid fa-shield-halved"></i>
+
+<h3>
+الحماية
+</h3>
+
+<p>
+إدارة الصلاحيات وقواعد الوصول
+</p>
+
+</div>
+
+
+
+
+
+
+
+<div class="card">
+
+<i class="fa-solid fa-chart-line"></i>
+
+<h3>
+التقارير
+</h3>
+
+<p>
+إحصائيات النظام والأداء
+</p>
+
+</div>
+
+
+
+
+
+
+
+<div class="card">
+
+<i class="fa-solid fa-code"></i>
+
+<h3>
+إعدادات النظام
+</h3>
+
+<p>
+تعديل إعدادات التطبيق
+</p>
+
+</div>
+
+
+
+
+
+
+
+<div class="card">
+
+<i class="fa-solid fa-bug"></i>
+
+<h3>
+سجل الأخطاء
+</h3>
+
+<p>
+متابعة مشاكل النظام
+</p>
+
+</div>
+
+
+
+
+</div>
+
+
+
+
+
+
+<div class="warning">
+
+<i class="fa-solid fa-triangle-exclamation"></i>
+
+هذه القائمة مخصصة للمطور فقط
+
+</div>
+
+
+
+
+</div>
+
+
+
+
+
+</div>
+
+
+
+
+</body>
+
+</html>
