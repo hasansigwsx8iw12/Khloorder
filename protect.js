@@ -15,12 +15,24 @@ import {
 
 
 
+// الصفحات التي تحتاج مدير فقط
+
+const adminPages = [
+
+    "employees.html",
+    "users.html",
+    "accounts.html"
+
+];
+
+
+
+
 
 onAuthStateChanged(auth, async (user)=>{
 
 
     if(!user){
-
 
         window.location.href="../login.html";
 
@@ -30,11 +42,8 @@ onAuthStateChanged(auth, async (user)=>{
 
 
 
-
     try{
 
-
-        // حفظ بيانات الحساب
 
         localStorage.setItem(
             "uid",
@@ -49,65 +58,82 @@ onAuthStateChanged(auth, async (user)=>{
 
 
 
-        // جلب بيانات الموظف من Realtime Database
-
         const employeeRef = ref(
             db,
             "employees/" + user.uid
         );
 
 
+
         const snapshot = await get(employeeRef);
 
 
 
-        if(snapshot.exists()){
+        if(!snapshot.exists()){
 
 
-            const data = snapshot.val();
+            alert("لا يوجد حساب موظف");
 
+            await signOut(auth);
 
+            window.location.href="../login.html";
 
-            localStorage.setItem(
-                "employeeName",
-                data.name || "غير معروف"
-            );
-
-
-
-            localStorage.setItem(
-                "role",
-                data.role || "employee"
-            );
-
-
-
-        }else{
-
-
-            localStorage.setItem(
-                "employeeName",
-                "غير معروف"
-            );
-
-
-            localStorage.setItem(
-                "role",
-                "employee"
-            );
-
+            return;
 
         }
+
+
+
+        const data = snapshot.val();
+
+
+
+        localStorage.setItem(
+            "employeeName",
+            data.name
+        );
+
+
+
+        localStorage.setItem(
+            "role",
+            data.role
+        );
+
+
+
+
+
+        // فحص صلاحيات الصفحة
+
+        let page =
+        window.location.pathname.split("/").pop();
+
+
+
+        if(
+            adminPages.includes(page)
+            &&
+            data.role !== "admin"
+        ){
+
+            alert("ليس لديك صلاحية الدخول");
+
+            window.location.href="index.html";
+
+            return;
+
+        }
+
 
 
 
     }catch(error){
 
 
-        console.log(
-            "خطأ:",
-            error
-        );
+        console.log(error);
+
+        alert("حدث خطأ في الحماية");
 
 
     }
@@ -115,7 +141,6 @@ onAuthStateChanged(auth, async (user)=>{
 
 
 });
-
 
 
 
