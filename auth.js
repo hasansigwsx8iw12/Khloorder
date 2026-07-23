@@ -85,13 +85,12 @@ window.login = async function(){
 
 
     }
-    catch(error){
+    
 catch(error){
 
-    console.log(error);
+    alert("حدث خطأ: " + error.code + "\n" + error.message);
 
-    document.getElementById("message").innerHTML =
-    error.code;
+    console.log(error);
 
 }
 
