@@ -44,17 +44,7 @@ result.forEach((doc)=>{
 
 });
 
-        result.forEach((doc) => {
-
-            const data = doc.data();
-
-            localStorage.setItem("userRole", data.role || "employee");
-
-            // اسم المستخدم (الحقل عندك اسمه Name)
-            localStorage.setItem("username", data.Name || "غير معروف");
-
-        });
-
+    
     } catch (error) {
 
         console.log(error);
