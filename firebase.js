@@ -5,6 +5,7 @@ import { getDatabase } from "https://www.gstatic.com/firebasejs/10.12.2/firebase
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+
 // Firebase Config
 
 const firebaseConfig = {
@@ -17,16 +18,30 @@ const firebaseConfig = {
   measurementId: "G-PXYS88ZM5T"
 };
 
+
+// Initialize Firebase
+
 const app = initializeApp(firebaseConfig);
 
+
 // Realtime Database
+
 const db = getDatabase(app);
 
+
 // Firestore
-const firestore = getFirestore(app);
+
+const firestore = getFirestore(app, {
+    experimentalAutoDetectLongPolling: true
+});
+
 
 // Authentication
+
 const auth = getAuth(app);
+
+
+// Export
 
 export {
     db,
