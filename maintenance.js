@@ -1,12 +1,31 @@
-alert("تم تحميل maintenance.js");
-
-import { db } from "./firebase.js";
+import { firestore, auth } from "./firebase.js";
 
 import {
-    ref,
-    push,
-    set
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    collection,
+    addDoc,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import {
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+
+
+let currentUser = null;
+
+
+// التأكد من المستخدم
+onAuthStateChanged(auth,(user)=>{
+
+    if(user){
+
+        currentUser = user;
+
+    }
+
+});
+
 
 
 // عرض النماذج
@@ -14,7 +33,10 @@ window.showForm = function(type){
 
 let box = document.getElementById("formArea");
 
+
+
 if(type === "maintenance"){
+
 
 box.innerHTML = `
 
@@ -23,27 +45,35 @@ box.innerHTML = `
 <label>الاسم الثلاثي للزبون</label>
 <input id="name" type="text">
 
+
 <label>الرقم الوطني</label>
 <input id="national" type="text">
 
+
 <label>مشكلة الزبون</label>
 <textarea id="problem"></textarea>
+
 
 <label>
 <input type="checkbox" id="dishCheck">
 عيار الصحن
 </label>
 
+
 <div id="dishBox"></div>
 
+
 <label>النقل</label>
-<input id="transfer" type="text">
+<input id="transfer">
+
 
 <label>البرج</label>
-<input id="tower" type="text">
+<input id="tower">
+
 
 <label>المبلغ المقبوض</label>
 <input id="price" type="number">
+
 
 <button id="saveMaintenanceBtn">
 حفظ الصيانة
@@ -51,39 +81,56 @@ box.innerHTML = `
 
 `;
 
+
+
 document.getElementById("dishCheck").onchange = dishOption;
+
 document.getElementById("saveMaintenanceBtn").onclick = saveMaintenance;
+
+
 
 }
 
-else if(type === "install" || type === "transfer"){
 
-let title = type === "install" ? "تركيبة" : "قلبة";
 
-box.innerHTML = `
+else if(type==="install" || type==="transfer"){
+
+
+let title = type==="install" ? "تركيبة":"قلبة";
+
+
+box.innerHTML=`
 
 <h2>${title}</h2>
 
+
 <label>اسم الزبون الثلاثي</label>
-<input id="name" type="text">
+<input id="name">
+
 
 <label>الرقم الوطني</label>
-<input id="national" type="text">
+<input id="national">
+
 
 <label>السرعة</label>
-<input id="speed" type="text">
+<input id="speed">
+
 
 <label>الإشارة</label>
-<input id="signal" type="text">
+<input id="signal">
 
-<label>المبلغ المقبوض</label>
+
+<label>المبلغ</label>
 <input id="price" type="number">
 
-<label>اسم البرج</label>
-<input id="tower" type="text">
+
+<label>البرج</label>
+<input id="tower">
+
 
 <label>السكتور</label>
-<input id="sector" type="text">
+<input id="sector">
+
 
 <button id="saveInstallBtn">
 حفظ ${title}
@@ -91,121 +138,222 @@ box.innerHTML = `
 
 `;
 
-document.getElementById("saveInstallBtn").onclick = function(){
-saveInstallation(title);
-};
+
+
+document.getElementById("saveInstallBtn").onclick =
+()=>saveInstallation(title);
+
+
 
 }
 
 };
 
 
-// خيار الصحن
+
+
+
 function dishOption(){
 
-let box = document.getElementById("dishBox");
+
+let box=document.getElementById("dishBox");
+
 
 if(document.getElementById("dishCheck").checked){
 
-box.innerHTML = `
+
+box.innerHTML=`
+
 <label>إشارة الصحن</label>
-<input id="dishSignal" type="text">
+<input id="dishSignal">
+
 `;
 
 }else{
 
-box.innerHTML = "";
+box.innerHTML="";
 
 }
 
 }
 
 
-// حفظ الصيانة
+
+
+
+
 async function saveMaintenance(){
+
 
 try{
 
-let id = push(ref(db,"maintenance")).key;
 
-await set(ref(db,"maintenance/"+id),{
+if(!currentUser){
+
+alert("يجب تسجيل الدخول");
+
+return;
+
+}
+
+
+
+await addDoc(
+collection(firestore,"maintenance"),
+{
+
 
 type:"صيانة",
 
 name:document.getElementById("name").value,
 
-employee:localStorage.getItem("userName") || "غير معروف",
-
 national:document.getElementById("national").value,
 
 problem:document.getElementById("problem").value,
 
-dishSignal:document.getElementById("dishSignal")?.value || "",
 
-transfer:document.getElementById("transfer").value,
+dishSignal:
+document.getElementById("dishSignal")?.value || "",
 
-tower:document.getElementById("tower").value,
 
-price:Number(document.getElementById("price").value),
+transfer:
+document.getElementById("transfer").value,
 
-date:new Date().toLocaleDateString("ar"),
 
-createdAt:Date.now()
+tower:
+document.getElementById("tower").value,
 
-});
+
+price:
+Number(document.getElementById("price").value),
+
+
+
+employee:
+localStorage.getItem("employeeName") || "غير معروف",
+
+
+uid:
+currentUser.uid,
+
+
+email:
+currentUser.email,
+
+
+createdAt:
+serverTimestamp()
+
+}
+
+);
+
 
 alert("تم حفظ الصيانة بنجاح");
 
+
 }catch(error){
 
-alert("خطأ: "+error.message);
 console.log(error);
 
-}
+alert(error.message);
 
 }
 
 
-// حفظ التركيبة والقلبة
+}
+
+
+
+
+
+
+
 async function saveInstallation(type){
+
 
 try{
 
-let id = push(ref(db,"maintenance")).key;
 
-await set(ref(db,"maintenance/"+id),{
+if(!currentUser){
+
+alert("يجب تسجيل الدخول");
+
+return;
+
+}
+
+
+
+await addDoc(
+collection(firestore,"maintenance"),
+{
+
 
 type:type,
 
-name:document.getElementById("name").value,
 
-employee:localStorage.getItem("userName") || "غير معروف",
+name:
+document.getElementById("name").value,
 
-national:document.getElementById("national").value,
 
-speed:document.getElementById("speed").value,
+national:
+document.getElementById("national").value,
 
-signal:document.getElementById("signal").value,
 
-price:Number(document.getElementById("price").value),
+speed:
+document.getElementById("speed").value,
 
-tower:document.getElementById("tower").value,
 
-sector:document.getElementById("sector").value,
+signal:
+document.getElementById("signal").value,
 
-date:new Date().toLocaleDateString("ar"),
 
-createdAt:Date.now()
+price:
+Number(document.getElementById("price").value),
 
-});
+
+tower:
+document.getElementById("tower").value,
+
+
+sector:
+document.getElementById("sector").value,
+
+
+
+employee:
+localStorage.getItem("employeeName") || "غير معروف",
+
+
+uid:
+currentUser.uid,
+
+
+email:
+currentUser.email,
+
+
+createdAt:
+serverTimestamp()
+
+
+}
+
+);
+
 
 alert("تم حفظ "+type+" بنجاح");
 
+
+
 }catch(error){
 
-alert("خطأ: "+error.message);
 console.log(error);
 
+alert(error.message);
+
 }
+
 
 }
