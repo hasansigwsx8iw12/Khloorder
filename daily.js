@@ -10,28 +10,34 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 
-let table = document.getElementById("dailyTable");
+const table = document.getElementById("dailyTable");
 
-let today = new Date().toLocaleDateString("ar");
+
+const today = new Date().toLocaleDateString("ar");
+
+
 
 
 
 onAuthStateChanged(auth,(user)=>{
 
 
-if(!user){
+    if(!user){
 
-window.location.href="../login.html";
+        window.location.href="../login.html";
 
-return;
+        return;
 
-}
+    }
 
 
-loadDaily(user.uid);
+    loadDaily(user.uid);
 
 
 });
+
+
+
 
 
 
@@ -39,118 +45,210 @@ loadDaily(user.uid);
 function loadDaily(uid){
 
 
-onValue(ref(db,"maintenance"),(snapshot)=>{
+    onValue(ref(db,"maintenance"),(snapshot)=>{
 
 
-let repair=0;
-let install=0;
-let transfer=0;
-let money=0;
+        let repair = 0;
 
+        let install = 0;
 
-table.innerHTML="";
+        let transfer = 0;
 
-
-let role = localStorage.getItem("role");
+        let money = 0;
 
 
 
-snapshot.forEach((item)=>{
-
-
-let row = item.val();
-
-
-// الموظف يرى شغله فقط
-
-if(role !== "admin" && row.uid !== uid){
-
-return;
-
-}
+        table.innerHTML = "";
 
 
 
-// فقط عمليات اليوم
-
-if(row.date === today){
-
-
-if(row.type==="صيانة"){
-
-repair++;
-
-}
-else if(row.type==="تركيبة"){
-
-install++;
-
-}
-else if(row.type==="قلبة"){
-
-transfer++;
-
-}
+        // جلب الصلاحية
+        let role = localStorage.getItem("role");
 
 
 
-money += Number(row.price || 0);
+        console.log("UID الحالي:", uid);
+
+        console.log("الصلاحية:", role);
 
 
 
-table.innerHTML += `
-
-<tr>
-
-<td>${row.employee || ""}</td>
-
-<td>${row.type || ""}</td>
-
-<td>${row.name || ""}</td>
-
-<td>${row.tower || ""}</td>
-
-<td>${row.price || 0}</td>
-
-<td>${row.date || ""}</td>
-
-</tr>
-
-`;
-
-}
 
 
-});
+        snapshot.forEach((item)=>{
+
+
+            let row = item.val();
 
 
 
-if(table.innerHTML===""){
-
-table.innerHTML=`
-
-<tr>
-<td colspan="6">
-لا توجد عمليات اليوم
-</td>
-</tr>
-
-`;
-
-}
+            console.log(
+                "الطلب:",
+                row.name,
+                row.uid
+            );
 
 
 
-document.getElementById("dailyRepair").innerHTML=repair;
-
-document.getElementById("dailyInstall").innerHTML=install;
-
-document.getElementById("dailyTransfer").innerHTML=transfer;
-
-document.getElementById("dailyMoney").innerHTML=money;
 
 
-});
+            // الموظف يرى طلباته فقط
+            if(role !== "admin"){
+
+
+                if(row.uid !== uid){
+
+                    return;
+
+                }
+
+
+            }
+
+
+
+
+
+
+            // عمليات اليوم فقط
+
+            if(row.date !== today){
+
+                return;
+
+            }
+
+
+
+
+
+
+            if(row.type === "صيانة"){
+
+
+                repair++;
+
+
+            }
+            else if(row.type === "تركيبة"){
+
+
+                install++;
+
+
+            }
+            else if(row.type === "قلبة"){
+
+
+                transfer++;
+
+
+            }
+
+
+
+
+            money += Number(row.price || 0);
+
+
+
+
+
+
+            table.innerHTML += `
+
+            <tr>
+
+
+            <td>
+            ${row.employee || "غير معروف"}
+            </td>
+
+
+            <td>
+            ${row.type || ""}
+            </td>
+
+
+            <td>
+            ${row.name || ""}
+            </td>
+
+
+            <td>
+            ${row.tower || ""}
+            </td>
+
+
+            <td>
+            ${row.price || 0}
+            </td>
+
+
+            <td>
+            ${row.date || ""}
+            </td>
+
+
+            </tr>
+
+            `;
+
+
+
+        });
+
+
+
+
+
+
+
+        if(table.innerHTML === ""){
+
+
+            table.innerHTML = `
+
+            <tr>
+
+            <td colspan="6">
+            لا توجد عمليات اليوم
+            </td>
+
+            </tr>
+
+            `;
+
+
+        }
+
+
+
+
+
+
+        document.getElementById("dailyRepair").innerHTML =
+        repair;
+
+
+
+        document.getElementById("dailyInstall").innerHTML =
+        install;
+
+
+
+        document.getElementById("dailyTransfer").innerHTML =
+        transfer;
+
+
+
+        document.getElementById("dailyMoney").innerHTML =
+        money;
+
+
+
+
+    });
 
 
 }
