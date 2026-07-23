@@ -4,7 +4,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 
 import { getDatabase } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import { initializeFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -40,17 +40,16 @@ const app = initializeApp(firebaseConfig);
 
 // Realtime Database
 
-const db = getDatabase(app);
+const db = getDatabase(
+    app,
+    "https://khlonetorder-default-rtdb.firebaseio.com"
+);
 
 
 
 // Firestore
 
-const firestore = initializeFirestore(app, {
-
-    experimentalForceLongPolling: true
-
-});
+const firestore = getFirestore(app);
 
 
 
@@ -63,11 +62,7 @@ const auth = getAuth(app);
 // Export
 
 export {
-
     db,
-
     firestore,
-
     auth
-
 };
