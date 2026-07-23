@@ -1,71 +1,117 @@
-import { auth, firestore } from "./firebase.js";
+import { auth, db } from "./firebase.js";
 
 import {
     onAuthStateChanged,
     signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+
 import {
-    collection,
-    getDocs,
-    query,
-    where
+    doc,
+    getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
-// التحقق من تسجيل الدخول
+
+// حماية الصفحة
 onAuthStateChanged(auth, async (user) => {
 
+
     if (!user) {
+
         window.location.href = "../login.html";
         return;
+
     }
+
+
 
     try {
 
-        const q = query(
-    collection(firestore, "users"),
-    where("email", "==", user.email)
-);
 
-const result = await getDocs(q);
+        // حفظ بيانات الحساب
+        localStorage.setItem("uid", user.uid);
+        localStorage.setItem("email", user.email);
 
-alert("عدد المستخدمين: " + result.size);
 
-result.forEach((doc)=>{
 
-    let data = doc.data();
+        // جلب بيانات الموظف
+        const employeeRef = doc(
+            db,
+            "employees",
+            user.uid
+        );
 
-    alert(JSON.stringify(data));
 
-    localStorage.setItem("userRole", data.role || "employee");
+        const employeeSnap = await getDoc(employeeRef);
 
-    localStorage.setItem("userName", data.Name || "غير معروف");
 
-});
 
-    
-    } catch (error) {
+        if(employeeSnap.exists()){
 
-        console.log(error);
 
-        localStorage.setItem("userName", "غير معروف");
+            let data = employeeSnap.data();
+
+
+            localStorage.setItem(
+                "employeeName",
+                data.name || "غير معروف"
+            );
+
+
+            localStorage.setItem(
+                "role",
+                data.role || "employee"
+            );
+
+
+        }else{
+
+
+            localStorage.setItem(
+                "employeeName",
+                "غير معروف"
+            );
+
+
+            localStorage.setItem(
+                "role",
+                "employee"
+            );
+
+
+        }
+
+
+
+    } catch(error){
+
+
+        console.log(
+            "خطأ في جلب بيانات الموظف:",
+            error
+        );
+
 
     }
 
+
 });
 
 
+
+
 // تسجيل الخروج
-window.logout = function () {
+window.logout = async function(){
 
-    signOut(auth).then(() => {
 
-        localStorage.removeItem("userRole");
-        localStorage.removeItem("userName");
+    await signOut(auth);
 
-        window.location.href = "../login.html";
 
-    });
+    localStorage.clear();
+
+
+    window.location.href="../login.html";
+
 
 };
