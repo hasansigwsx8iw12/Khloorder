@@ -1,10 +1,15 @@
-import { db } from "./firebase.js";
+import { db, auth } from "./firebase.js";
 
 
 import {
     ref,
     onValue
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+
+import {
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 
 
@@ -22,7 +27,35 @@ let lastOperations = document.getElementById("lastOperations");
 
 
 
-// قراءة البيانات
+
+
+onAuthStateChanged(auth,(user)=>{
+
+
+if(!user){
+
+window.location.href="login.html";
+
+return;
+
+}
+
+
+loadDashboard(user.uid);
+
+
+});
+
+
+
+
+
+
+
+
+function loadDashboard(uid){
+
+
 
 const dataRef = ref(db,"maintenance");
 
@@ -31,9 +64,13 @@ const dataRef = ref(db,"maintenance");
 onValue(dataRef,(snapshot)=>{
 
 
+
 let repairs = 0;
+
 let installs = 0;
+
 let moves = 0;
+
 
 let money = 0;
 
@@ -42,10 +79,37 @@ let operations = [];
 
 
 
+let role = localStorage.getItem("role");
+
+
+
+
+
 snapshot.forEach((item)=>{
 
 
 let data = item.val();
+
+
+
+
+// الموظف يرى أعماله فقط
+
+if(role !== "admin"){
+
+
+if(data.uid !== uid){
+
+return;
+
+}
+
+
+}
+
+
+
+
 
 
 
@@ -79,20 +143,24 @@ money += Number(data.price || 0);
 
 
 
+
 });
 
 
 
 
 
-// تحديث العدادات
+
 
 
 repairsCount.innerHTML = repairs;
 
+
 installCount.innerHTML = installs;
 
+
 moveCount.innerHTML = moves;
+
 
 moneyCount.innerHTML = money;
 
@@ -100,10 +168,10 @@ moneyCount.innerHTML = money;
 
 
 
-// آخر العمليات
 
 
-lastOperations.innerHTML="";
+
+lastOperations.innerHTML = "";
 
 
 
@@ -111,10 +179,12 @@ let last = operations.reverse().slice(0,5);
 
 
 
-if(last.length===0){
 
 
-lastOperations.innerHTML=`
+if(last.length === 0){
+
+
+lastOperations.innerHTML = `
 
 <tr>
 
@@ -128,10 +198,13 @@ lastOperations.innerHTML=`
 
 `;
 
-
 return;
 
 }
+
+
+
+
 
 
 
@@ -163,3 +236,7 @@ lastOperations.innerHTML += `
 
 
 });
+
+
+
+}
