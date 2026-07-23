@@ -1,140 +1,182 @@
-import { db } from "./firebase.js";
+import { db, auth } from "./firebase.js";
 
 import {
     ref,
-    onValue,
-    remove,
-    update
+    onValue
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
+import {
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+
 const table = document.getElementById("dataTable");
+
+
 let allData = [];
 
-// تحميل البيانات
-function loadData() {
 
-    onValue(ref(db, "maintenance"), (snapshot) => {
 
-        allData = [];
+onAuthStateChanged(auth,(user)=>{
 
-        snapshot.forEach((item) => {
-            allData.push({
-                id: item.key,
-                data: item.val()
-            });
-        });
 
-        showData(allData);
+    if(!user){
 
-    });
+        window.location.href="../login.html";
+
+        return;
+
+    }
+
+
+
+    loadData(user.uid);
+
+
+});
+
+
+
+
+
+
+function loadData(uid){
+
+
+onValue(ref(db,"maintenance"),(snapshot)=>{
+
+
+allData=[];
+
+
+let role =
+localStorage.getItem("role");
+
+
+
+snapshot.forEach((item)=>{
+
+
+let data = item.val();
+
+
+
+// إذا كان مدير يشاهد كل شيء
+
+if(role === "admin"){
+
+
+allData.push({
+
+id:item.key,
+data:data
+
+});
+
 
 }
 
-// عرض البيانات
-function showData(data) {
 
-    table.innerHTML = "";
 
-    if (data.length === 0) {
+// إذا كان موظف يشاهد عمله فقط
 
-        table.innerHTML = `
-        <tr>
-            <td colspan="8">لا توجد بيانات</td>
-        </tr>
-        `;
+else{
 
-        return;
-    }
 
-    data.forEach((item) => {
+if(data.uid === uid){
 
-        const d = item.data;
 
-        table.innerHTML += `
-        <tr>
+allData.push({
 
-            <td>${d.employee || "غير معروف"}</td>
+id:item.key,
+data:data
 
-            <td>${d.type || ""}</td>
+});
 
-            <td>${d.name || ""}</td>
-
-            <td>${d.national || ""}</td>
-
-            <td>${d.tower || ""}</td>
-
-            <td>${d.price || 0}</td>
-
-            <td>${d.date || ""}</td>
-
-            <td>
-                <button onclick="editData('${item.id}')">
-                    تعديل
-                </button>
-
-                <button
-                    style="background:#e53935"
-                    onclick="deleteData('${item.id}')">
-                    حذف
-                </button>
-            </td>
-
-        </tr>
-        `;
-
-    });
 
 }
 
-// البحث
-window.searchName = function () {
 
-    const value = document
-        .getElementById("searchName")
-        .value
-        .trim();
+}
 
-    if (value === "") {
-        showData(allData);
-        return;
-    }
 
-    const result = allData.filter(item =>
-        (item.data.name || "").includes(value)
-    );
 
-    showData(result);
+});
 
-};
 
-// حذف
-window.deleteData = async function (id) {
 
-    if (!confirm("هل تريد حذف هذا الطلب؟")) return;
+showData(allData);
 
-    await remove(ref(db, "maintenance/" + id));
 
-    alert("تم الحذف");
 
-};
+});
 
-// تعديل
-window.editData = async function (id) {
 
-    const item = allData.find(x => x.id === id);
+}
 
-    if (!item) return;
 
-    const newName = prompt("تعديل الاسم", item.data.name);
 
-    if (!newName) return;
 
-    await update(ref(db, "maintenance/" + id), {
-        name: newName
-    });
 
-    alert("تم التعديل");
 
-};
 
-loadData();
+function showData(data){
+
+
+table.innerHTML="";
+
+
+
+if(data.length===0){
+
+
+table.innerHTML=`
+
+<tr>
+<td colspan="8">
+لا توجد بيانات
+</td>
+</tr>
+
+`;
+
+return;
+
+}
+
+
+
+data.forEach(item=>{
+
+
+let d=item.data;
+
+
+table.innerHTML += `
+
+<tr>
+
+<td>${d.employee || ""}</td>
+
+<td>${d.type || ""}</td>
+
+<td>${d.name || ""}</td>
+
+<td>${d.national || ""}</td>
+
+<td>${d.tower || ""}</td>
+
+<td>${d.price || 0}</td>
+
+<td>${d.date || ""}</td>
+
+
+</tr>
+
+`;
+
+
+});
+
+
+}
