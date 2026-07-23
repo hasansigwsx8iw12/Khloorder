@@ -1,10 +1,9 @@
-import { auth, db } from "./firebase.js";
+import { auth, firestore } from "./firebase.js";
 
 import {
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
 
 import {
     doc,
@@ -13,14 +12,16 @@ import {
 
 
 
-// تسجيل الدخول
 window.login = async function(){
 
+
     let email = document.getElementById("email").value.trim();
+
     let password = document.getElementById("password").value;
 
 
     let message = document.getElementById("message");
+
 
 
     try{
@@ -36,27 +37,36 @@ window.login = async function(){
         const user = userCredential.user;
 
 
-        // حفظ uid والبريد
+
+        // حفظ بيانات المستخدم
         localStorage.setItem("uid", user.uid);
+
         localStorage.setItem("email", user.email);
 
 
 
-        // جلب اسم الموظف من Firestore
-        let userDoc = await getDoc(
-            doc(db, "employees", user.uid)
+        // جلب بيانات الموظف
+        const employeeRef = doc(
+            firestore,
+            "employees",
+            user.uid
         );
 
 
-        if(userDoc.exists()){
+        const employeeSnap = await getDoc(employeeRef);
 
 
-            let data = userDoc.data();
+
+        if(employeeSnap.exists()){
+
+
+            let data = employeeSnap.data();
+
 
 
             localStorage.setItem(
                 "employeeName",
-                data.name || "موظف"
+                data.name || "غير معروف"
             );
 
 
@@ -66,12 +76,19 @@ window.login = async function(){
             );
 
 
+
         }else{
 
 
             localStorage.setItem(
                 "employeeName",
-                "موظف"
+                "غير معروف"
+            );
+
+
+            localStorage.setItem(
+                "role",
+                "employee"
             );
 
 
@@ -79,27 +96,37 @@ window.login = async function(){
 
 
 
-        // الانتقال للوحة
-        window.location.href="index.html";
+        window.location.href = "index.html";
 
+
+
+    }catch(error){
+
+
+        console.log(error);
+
+
+        if(message){
+
+            message.innerHTML =
+            "خطأ في البريد أو كلمة المرور";
+
+        }
+
+
+        alert(error.code + "\n" + error.message);
 
 
     }
-    
-catch(error){
-
-    alert("حدث خطأ: " + error.code + "\n" + error.message);
-
-    console.log(error);
-
-}
 
 
 };
 
 
 
-// إنشاء مستخدم (للاستخدام لاحقًا من لوحة الإدارة)
+
+
+// إنشاء مستخدم (للمستقبل)
 window.register = async function(email,password){
 
 
@@ -117,11 +144,11 @@ window.register = async function(email,password){
         return result.user.uid;
 
 
-    }
-    catch(error){
+    }catch(error){
 
 
         console.log(error);
+
         return null;
 
 
