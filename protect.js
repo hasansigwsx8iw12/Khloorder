@@ -49,7 +49,7 @@ result.forEach((doc)=>{
 
         console.log(error);
 
-        localStorage.setItem("username", "غير معروف");
+        localStorage.setItem("userName", "غير معروف");
 
     }
 
