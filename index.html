@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
 
 <meta charset="UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>KHLLO NET</title>
@@ -15,57 +17,116 @@
 
 </head>
 
+
 <body>
+
 
 <div class="sidebar">
 
+
 <div class="logo">
+
 <h2>KHLLO NET</h2>
+
 </div>
+
+
+
 
 <ul>
 
+
 <li class="active">
+
 <a href="index.html">
+
 <i class="fa-solid fa-house"></i>
+
 الرئيسية
+
 </a>
+
 </li>
 
+
+
+
 <li>
+
 <a href="add.html">
+
 <i class="fa-solid fa-plus"></i>
+
 إضافة صيانة
+
 </a>
+
 </li>
 
+
+
+
 <li>
+
 <a href="repairs.html">
+
 <i class="fa-solid fa-screwdriver-wrench"></i>
+
 الصيانات
+
 </a>
+
 </li>
 
+
+
+
 <li>
+
 <a href="daily.html">
+
 <i class="fa-solid fa-calendar-days"></i>
+
 السجل اليومي
+
 </a>
+
 </li>
 
+
+
+
 <li>
+
 <a href="accounts.html">
+
 <i class="fa-solid fa-wallet"></i>
+
 الحسابات
+
 </a>
+
 </li>
 
+
+
+
 <li>
+
 <a href="users.html">
+
 <i class="fa-solid fa-users"></i>
+
 المستخدمون
+
 </a>
+
 </li>
+
+
+
+
+
 <li>
 
 <a onclick="logout()">
@@ -78,95 +139,221 @@
 
 </li>
 
+
+
 </ul>
 
+
 </div>
+
+
+
+
+
+
+
+
 
 <div class="main">
 
+
+
 <header>
 
-<h1>لوحة التحكم</h1>
+
+<h1>
+لوحة التحكم
+</h1>
+
+
 
 <div class="user">
 
+
 <i class="fa-solid fa-user"></i>
 
-<span>Admin</span>
+
+<span id="userName">
+جاري التحميل...
+</span>
+
 
 </div>
+
+
 
 </header>
 
+
+
+
+
+
+
+
+
 <div class="cards">
 
+
+
 <div class="card">
+
 
 <i class="fa-solid fa-screwdriver-wrench"></i>
 
-<h3>الصيانات</h3>
 
-<h1 id="repairsCount">0</h1>
+<h3>
+الصيانات
+</h3>
+
+
+<h1 id="repairsCount">
+0
+</h1>
+
 
 </div>
 
+
+
+
+
+
 <div class="card">
+
 
 <i class="fa-solid fa-satellite-dish"></i>
 
-<h3>التركيبات</h3>
 
-<h1 id="installCount">0</h1>
+<h3>
+التركيبات
+</h3>
+
+
+<h1 id="installCount">
+0
+</h1>
+
 
 </div>
 
+
+
+
+
+
 <div class="card">
+
 
 <i class="fa-solid fa-repeat"></i>
 
-<h3>القلبات</h3>
 
-<h1 id="moveCount">0</h1>
+<h3>
+القلبات
+</h3>
+
+
+<h1 id="moveCount">
+0
+</h1>
+
 
 </div>
+
+
+
+
+
+
 
 <div class="card">
 
+
 <i class="fa-solid fa-money-bill-wave"></i>
 
-<h3>المقبوض</h3>
 
-<h1 id="moneyCount">0</h1>
+<h3>
+المقبوض
+</h3>
+
+
+<h1 id="moneyCount">
+0
+</h1>
+
 
 </div>
 
+
+
+
 </div>
+
+
+
+
+
+
+
+
 
 <div class="table-box">
 
-<h2>آخر العمليات</h2>
+
+<h2>
+آخر العمليات
+</h2>
+
+
+
+
 
 <table>
 
+
 <thead>
+
 
 <tr>
 
-<th>النوع</th>
+<th>
+النوع
+</th>
 
-<th>الاسم</th>
 
-<th>البرج</th>
+<th>
+الاسم
+</th>
 
-<th>المبلغ</th>
 
-<th>التاريخ</th>
+<th>
+البرج
+</th>
+
+
+<th>
+المبلغ
+</th>
+
+
+<th>
+التاريخ
+</th>
+
 
 </tr>
 
+
 </thead>
 
+
+
+
+
+
+
 <tbody id="lastOperations">
+
 
 <tr>
 
@@ -178,15 +365,35 @@
 
 </tr>
 
+
 </tbody>
+
 
 </table>
 
-</div>
+
 
 </div>
 
-  <script type="module" src="app.js"></script>
+
+
+
+
+
+
+</div>
+
+
+
+
+
+
+
+<script type="module" src="app.js"></script>
+
 <script type="module" src="protect.js"></script>
+
+
 </body>
+
 </html>
