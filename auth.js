@@ -86,16 +86,14 @@ window.login = async function(){
 
     }
     catch(error){
+catch(error){
 
+    console.log(error);
 
-        console.log(error);
+    document.getElementById("message").innerHTML =
+    error.code;
 
-
-        message.innerHTML =
-        "خطأ في البريد أو كلمة المرور";
-
-
-    }
+}
 
 
 };
