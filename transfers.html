@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>القلبات - KHLLO NET</title>
+
+<link rel="stylesheet" href="style.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<div class="logo">
+<h2>KHLLO NET</h2>
+</div>
+
+<ul>
+
+<li>
+<a href="index.html">
+<i class="fa-solid fa-house"></i>
+الرئيسية
+</a>
+</li>
+
+<li>
+<a href="add.html">
+<i class="fa-solid fa-plus"></i>
+إضافة طلب
+</a>
+</li>
+
+<li>
+<a href="repairs.html">
+<i class="fa-solid fa-screwdriver-wrench"></i>
+الصيانات
+</a>
+</li>
+
+<li>
+<a href="installations.html">
+<i class="fa-solid fa-satellite-dish"></i>
+التركيبات
+</a>
+</li>
+
+<li class="active">
+<a href="transfers.html">
+<i class="fa-solid fa-repeat"></i>
+القلبات
+</a>
+</li>
+
+<li>
+<a href="daily.html">
+<i class="fa-solid fa-calendar-days"></i>
+السجل اليومي
+</a>
+</li>
+
+<li>
+<a href="accounts.html">
+<i class="fa-solid fa-wallet"></i>
+الحسابات
+</a>
+</li>
+
+<li>
+<a href="users.html">
+<i class="fa-solid fa-users"></i>
+المستخدمون
+</a>
+</li>
+
+<li>
+<a href="inventory.html">
+<i class="fa-solid fa-boxes-stacked"></i>
+الجرد
+</a>
+</li>
+
+<li>
+<a href="#" onclick="logout()">
+<i class="fa-solid fa-right-from-bracket"></i>
+تسجيل الخروج
+</a>
+</li>
+
+</ul>
+
+</div>
+
+<div class="main">
+
+<header>
+
+<h1>سجل القلبات</h1>
+
+</header>
+
+<div class="table-box">
+
+<h2>طلبات القلبات</h2>
+
+<div style="margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap;">
+
+<input
+id="searchName"
+type="text"
+placeholder="ابحث باسم الزبون..."
+onkeyup="searchName()">
+
+<button onclick="loadData()">
+<i class="fa-solid fa-rotate"></i>
+تحديث
+</button>
+
+</div>
+
+<div style="overflow-x:auto;">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>الموظف</th>
+<th>النوع</th>
+<th>اسم الزبون</th>
+<th>الرقم الوطني</th>
+<th>السرعة</th>
+<th>الإشارة</th>
+<th>البرج</th>
+<th>السكتور</th>
+<th>المبلغ</th>
+<th>التاريخ</th>
+<th>إجراءات</th>
+
+</tr>
+
+</thead>
+
+<tbody id="dataTable">
+
+<tr>
+
+<td colspan="11">
+جاري تحميل البيانات...
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+<script type="module" src="transfers.js"></script>
+<script type="module" src="protect.js"></script>
+
+</body>
+
+  </html>
