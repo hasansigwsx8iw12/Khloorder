@@ -99,3 +99,81 @@
 </ul>
 
 </div>
+
+<div class="main">
+
+<header>
+
+<h1>سجل التركيبات</h1>
+
+</header>
+
+<div class="table-box">
+
+<h2>طلبات التركيبات</h2>
+
+<div style="margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap;">
+
+<input
+id="searchName"
+type="text"
+placeholder="ابحث باسم الزبون..."
+onkeyup="searchName()">
+
+<button onclick="loadData()">
+<i class="fa-solid fa-rotate"></i>
+تحديث
+</button>
+
+</div>
+
+<div style="overflow-x:auto;">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>الموظف</th>
+<th>النوع</th>
+<th>اسم الزبون</th>
+<th>الرقم الوطني</th>
+<th>السرعة</th>
+<th>الإشارة</th>
+<th>البرج</th>
+<th>السكتور</th>
+<th>المبلغ</th>
+<th>التاريخ</th>
+<th>إجراءات</th>
+
+</tr>
+
+</thead>
+
+<tbody id="dataTable">
+
+<tr>
+
+<td colspan="11">
+جاري تحميل البيانات...
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+<script type="module" src="installations.js"></script>
+<script type="module" src="protect.js"></script>
+
+</body>
+
+  </html>
