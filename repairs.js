@@ -11,341 +11,169 @@ import {
     onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-
 const table = document.getElementById("dataTable");
 
 let allData = [];
 
+onAuthStateChanged(auth, (user) => {
 
-
-
-
-onAuthStateChanged(auth,(user)=>{
-
-
-    if(!user){
-
-        window.location.href="login.html";
-
+    if (!user) {
+        window.location.href = "login.html";
         return;
-
     }
-
 
     loadData(user.uid);
 
-
 });
 
+function loadData(uid) {
 
+    onValue(ref(db, "maintenance"), (snapshot) => {
 
+        allData = [];
 
+        let role = localStorage.getItem("role");
 
+        snapshot.forEach((item) => {
 
+            let data = item.val();
 
-function loadData(uid){
+            // عرض الصيانات فقط
+            if (data.type !== "صيانة") return;
 
+            // الموظف يرى أعماله فقط
+            if (role !== "admin") {
 
-onValue(ref(db,"maintenance"),(snapshot)=>{
+                if (data.uid !== uid) return;
 
+            }
 
-allData=[];
+            allData.push({
+                id: item.key,
+                data: data
+            });
 
+        });
 
-let role = localStorage.getItem("role");
+        showData(allData);
 
+    });
 
+}
 
-snapshot.forEach((item)=>{
+function showData(data) {
 
+    table.innerHTML = "";
 
-let data = item.val();
+    if (data.length === 0) {
 
-
-
-// الموظف يرى أعماله فقط
-
-if(role !== "admin"){
-
-
-    if(data.uid !== uid){
+        table.innerHTML = `
+        <tr>
+            <td colspan="11">لا توجد بيانات</td>
+        </tr>
+        `;
 
         return;
 
     }
 
-}
+    data.forEach((item) => {
 
+        const d = item.data;
 
+        table.innerHTML += `
+        <tr>
 
-allData.push({
+            <td>${d.employee || "غير معروف"}</td>
 
-id:item.key,
+            <td>${d.type || ""}</td>
 
-data:data
+            <td>${d.name || ""}</td>
 
-});
+            <td>${d.national || ""}</td>
 
+            <td>${d.problem || ""}</td>
 
+            <td>${d.dishSignal || ""}</td>
 
-});
+            <td>${d.transfer || ""}</td>
 
+            <td>${d.tower || ""}</td>
 
+            <td>${d.price || 0}</td>
 
-showData(allData);
+            <td>${d.date || ""}</td>
 
+            <td>
 
+                <button onclick="editData('${item.id}')">
+                تعديل
+                </button>
 
-});
+                <button style="background:#e53935"
+                onclick="deleteData('${item.id}')">
+                حذف
+                </button>
 
+            </td>
 
-}
+        </tr>
+        `;
 
-
-
-
-
-
-
-
-
-function showData(data){
-
-
-table.innerHTML="";
-
-
-
-if(data.length === 0){
-
-
-table.innerHTML=`
-
-<tr>
-
-<td colspan="13">
-لا توجد بيانات
-</td>
-
-</tr>
-
-`;
-
-return;
+    });
 
 }
-
-
-
-
-
-
-
-data.forEach((item)=>{
-
-
-const d = item.data;
-
-
-
-table.innerHTML += `
-
-<tr>
-
-
-<td>${d.employee || "غير معروف"}</td>
-
-
-<td>${d.type || ""}</td>
-
-
-<td>${d.name || ""}</td>
-
-
-<td>${d.national || ""}</td>
-
-
-<td>${d.problem || ""}</td>
-
-
-<td>${d.dishSignal || ""}</td>
-
-
-<td>${d.transfer || ""}</td>
-
-
-<td>${d.speed || ""}</td>
-
-
-<td>${d.signal || ""}</td>
-
-
-<td>${d.tower || ""}</td>
-
-
-<td>${d.sector || ""}</td>
-
-
-<td>${d.price || 0}</td>
-
-
-<td>${d.date || ""}</td>
-
-
-
-<td>
-
-<button onclick="editData('${item.id}')">
-تعديل
-</button>
-
-
-<button 
-style="background:red"
-onclick="deleteData('${item.id}')">
-حذف
-</button>
-
-
-</td>
-
-
-
-</tr>
-
-`;
-
-
-
-});
-
-
-
-}
-
-
-
-
-
-
-
-
-
 
 // البحث
 
-window.searchName=function(){
+window.searchName = function () {
 
+    let value = document.getElementById("searchName").value.trim();
 
-let value =
-document.getElementById("searchName").value.trim();
+    if (value === "") {
+        showData(allData);
+        return;
+    }
 
+    let result = allData.filter(item =>
+        (item.data.name || "").includes(value)
+    );
 
-
-if(value===""){
-
-showData(allData);
-
-return;
-
-}
-
-
-
-let result = allData.filter(item=>
-
-(item.data.name || "").includes(value)
-
-);
-
-
-
-showData(result);
-
-
+    showData(result);
 
 };
-
-
-
-
-
-
-
-
 
 // حذف
 
-window.deleteData = async function(id){
+window.deleteData = async function (id) {
 
+    if (!confirm("هل تريد حذف الطلب؟")) return;
 
-if(!confirm("هل تريد حذف الطلب؟"))
-return;
+    await remove(ref(db, "maintenance/" + id));
 
-
-
-await remove(
-ref(db,"maintenance/"+id)
-);
-
-
-
-alert("تم الحذف");
-
-
+    alert("تم الحذف");
 
 };
 
+// تعديل
 
+window.editData = async function (id) {
 
+    let item = allData.find(x => x.id === id);
 
+    if (!item) return;
 
+    let newName = prompt(
+        "تعديل اسم الزبون",
+        item.data.name
+    );
 
+    if (!newName) return;
 
+    await update(ref(db, "maintenance/" + id), {
+        name: newName
+    });
 
-
-// تعديل الاسم فقط
-
-window.editData = async function(id){
-
-
-
-let item =
-allData.find(x=>x.id===id);
-
-
-
-if(!item)
-return;
-
-
-
-let newName =
-prompt(
-"تعديل الاسم",
-item.data.name
-);
-
-
-
-if(!newName)
-return;
-
-
-
-await update(
-ref(db,"maintenance/"+id),
-{
-
-name:newName
-
-}
-
-);
-
-
-
-alert("تم التعديل");
-
+    alert("تم التعديل");
 
 };
