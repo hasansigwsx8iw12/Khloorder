@@ -1,130 +1,77 @@
 import { db } from "./firebase.js";
 
-
 import {
+    ref,
+    onValue
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-collection,
+const table = document.getElementById("employeesTable");
 
-getDocs
+onValue(ref(db, "maintenance"), (snapshot) => {
 
-}
+    let employees = {};
 
-from
+    snapshot.forEach((item) => {
 
-"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        const data = item.val();
 
+        const name = data.employee || "غير معروف";
 
+        if (!employees[name]) {
 
+            employees[name] = {
 
-let todayMoney = 0;
+                repairs: 0,
+                installs: 0,
+                transfers: 0,
+                money: 0
 
-let monthMoney = 0;
+            };
 
-let allMoney = 0;
+        }
 
-let count = 0;
+        if (data.type === "صيانة") {
 
+            employees[name].repairs++;
 
+        } else if (data.type === "تركيبة") {
 
-let table = document.getElementById("accountTable");
+            employees[name].installs++;
 
+        } else if (data.type === "قلبة") {
 
+            employees[name].transfers++;
 
-let today = new Date().toLocaleDateString("ar");
+        }
 
+        employees[name].money += Number(data.price || 0);
 
-let month = new Date().getMonth()+1;
+    });
 
+    table.innerHTML = "";
 
+    Object.keys(employees).forEach((name) => {
 
-async function loadAccounts(){
+        const e = employees[name];
 
+        table.innerHTML += `
 
-let data = await getDocs(
+        <tr>
 
-collection(db,"maintenance")
+            <td>${name}</td>
 
-);
+            <td>${e.repairs}</td>
 
+            <td>${e.installs}</td>
 
+            <td>${e.transfers}</td>
 
-table.innerHTML="";
+            <td>${e.money}</td>
 
+        </tr>
 
+        `;
 
-data.forEach((item)=>{
-
-
-let row = item.data();
-
-
-
-let price = Number(row.price || 0);
-
-
-
-allMoney += price;
-
-count++;
-
-
-
-if(row.date === today){
-
-todayMoney += price;
-
-}
-
-
-
-let rowMonth = new Date().getMonth()+1;
-
-
-
-if(rowMonth === month){
-
-monthMoney += price;
-
-}
-
-
-
-
-
-table.innerHTML += `
-
-<tr>
-
-<td>${row.type || ""}</td>
-
-<td>${row.name || ""}</td>
-
-<td>${price}</td>
-
-<td>${row.date || ""}</td>
-
-</tr>
-
-`;
-
-
+    });
 
 });
-
-
-
-document.getElementById("todayMoney").innerHTML=todayMoney;
-
-document.getElementById("monthMoney").innerHTML=monthMoney;
-
-document.getElementById("allMoney").innerHTML=allMoney;
-
-document.getElementById("allCount").innerHTML=count;
-
-
-
-}
-
-
-
-loadAccounts();
