@@ -74,4 +74,69 @@ onValue(ref(db, "maintenance"), (snapshot) => {
 
     });
 
+
+
+    // أكثر الموظفين
+
+    let bestRepair = { name: "-", count: 0 };
+    let bestInstall = { name: "-", count: 0 };
+    let bestTransfer = { name: "-", count: 0 };
+
+    Object.keys(employees).forEach((name) => {
+
+        let e = employees[name];
+
+        if (e.repairs > bestRepair.count) {
+
+            bestRepair = {
+                name: name,
+                count: e.repairs
+            };
+
+        }
+
+        if (e.installs > bestInstall.count) {
+
+            bestInstall = {
+                name: name,
+                count: e.installs
+            };
+
+        }
+
+        if (e.transfers > bestTransfer.count) {
+
+            bestTransfer = {
+                name: name,
+                count: e.transfers
+            };
+
+        }
+
+    });
+
+
+
+    document.getElementById("bestRepairName").innerHTML =
+        bestRepair.name;
+
+    document.getElementById("bestRepairCount").innerHTML =
+        bestRepair.count + " صيانة";
+
+
+
+    document.getElementById("bestInstallName").innerHTML =
+        bestInstall.name;
+
+    document.getElementById("bestInstallCount").innerHTML =
+        bestInstall.count + " تركيبة";
+
+
+
+    document.getElementById("bestTransferName").innerHTML =
+        bestTransfer.name;
+
+    document.getElementById("bestTransferCount").innerHTML =
+        bestTransfer.count + " قلبة";
+
 });
