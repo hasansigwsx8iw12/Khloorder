@@ -73,6 +73,8 @@ box.innerHTML = `
 <label>البرج</label>
 <input id="tower">
 
+<label>الرقم</label>
+<input id="phon">
 
 <label>المبلغ المقبوض</label>
 <input id="price" type="number">
@@ -140,6 +142,8 @@ box.innerHTML = `
 <label>السكتور</label>
 <input id="sector">
 
+<label>الرقم</label>
+<input id="phon">
 
 
 <button id="saveInstallBtn">
@@ -256,7 +260,9 @@ document.getElementById("transfer").value,
 tower:
 document.getElementById("tower").value,
 
-
+phon:
+Number(document.getElementById("phon").value),
+    
 
 price:
 Number(document.getElementById("price").value),
@@ -377,7 +383,9 @@ document.getElementById("tower").value,
 sector:
 document.getElementById("sector").value,
 
-
+phon:
+Number(document.getElementById("phon").value),
+    
 
 employee:
 localStorage.getItem("employeeName") || "غير معروف",
