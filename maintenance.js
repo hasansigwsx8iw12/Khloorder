@@ -161,7 +161,7 @@ document.getElementById("saveInstallBtn").onclick =
 
 }
 
-    if(type === "maintenance"){
+    if(type === "maint soon"){
 
 
 box.innerHTML = `
