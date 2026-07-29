@@ -102,6 +102,8 @@ function showData(data) {
 
             <td>${d.price || 0}</td>
 
+            <td>${d.phon || 0}</td>
+
             <td>${d.date || ""}</td>
 
             <td>
