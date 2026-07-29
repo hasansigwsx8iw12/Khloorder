@@ -74,7 +74,7 @@ box.innerHTML = `
 <input id="tower">
 
 <label>الرقم</label>
-<input id="phon">
+<input id="phon" type="number">
 
 <label>المبلغ المقبوض</label>
 <input id="price" type="number">
@@ -143,7 +143,7 @@ box.innerHTML = `
 <input id="sector">
 
 <label>الرقم</label>
-<input id="phon">
+<input id="phon" type="number">
 
 
 <button id="saveInstallBtn">
