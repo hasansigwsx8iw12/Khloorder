@@ -161,6 +161,35 @@ document.getElementById("saveInstallBtn").onclick =
 
 }
 
+    if(type === "maintenance"){
+
+
+box.innerHTML = `
+
+<h2>طلب تأجيل صيانة</h2>
+
+
+
+
+
+
+<button id="savesoon">
+حفظ الصيانة
+</button>
+
+`;
+
+
+
+
+
+document.getElementById("savesoon").onclick =
+saveMaintenance;
+
+
+
+}
+
 };
 
 
