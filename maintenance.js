@@ -161,7 +161,7 @@ document.getElementById("saveInstallBtn").onclick =
 
 }
 
-    if(type === "maint soon"){
+    if(type === "maintsoon"){
 
 
 box.innerHTML = `
@@ -357,6 +357,92 @@ alert(error.message);
 
 
 }
+
+
+async function saveMaintenance(){
+
+
+try{
+
+
+let id =
+push(ref(db,"maintenance")).key;
+
+
+
+await set(
+
+ref(db,"maintenance/"+id),
+
+{
+
+
+type:"تاجيل صيانه",
+
+
+
+name:
+document.getElementById("name").value,
+
+
+
+national:
+document.getElementById("national").value,
+
+
+
+postponement:
+document.getElementById("postponement").value,
+
+phon:
+Number(document.getElementById("phon").value),
+
+employee:
+localStorage.getItem("employeeName") || "غير معروف",
+
+
+uid:
+currentUser?.uid || "",
+
+
+email:
+currentUser?.email || "",
+
+
+
+date:
+new Date().toLocaleDateString("ar"),
+
+
+
+createdAt:
+Date.now()
+
+
+}
+
+
+);
+
+
+
+alert("تم حفظ تاحيل الصيانة ");
+
+
+
+}catch(error){
+
+
+console.log(error);
+
+alert(error.message);
+
+
+}
+
+
+}
+
 
 
 
