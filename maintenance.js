@@ -161,46 +161,7 @@ document.getElementById("saveInstallBtn").onclick =
 
 }
 
-    if(type === "maintsoon"){
-
-
-box.innerHTML = `
-
-<h2>طلب تأجيل صيانة</h2>
-
-<label>الاسم الثلاثي للزبون</label>
-<input id="name">
-
-
-<label>الرقم الوطني</label>
-<input id="national">
-
-<label>سبب التأجيل</label>
-<input id="postponement">
-
-
-<label>الرقم</label>
-<input id="phon">
-
-
-
-
-<button id="savesoon">
-حفظ طلب التأجيل
-</button>
-
-`;
-
-
-
-
-
-document.getElementById("savesoon").onclick =
-saveMaintenance;
-
-
-
-}
+  
 
 };
 
