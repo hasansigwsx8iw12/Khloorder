@@ -13,6 +13,69 @@ body{min-height:100vh;font-family:Arial,Tahoma,sans-serif;color:var(--text);back
 .accept-btn{width:auto;margin:0;padding:9px 13px;font-size:12px}.accepted{display:inline-block;color:var(--green);font-weight:bold;font-size:12px}
 .modal{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;padding:20px;z-index:10}.modal.hidden{display:none}.modal-box{width:min(430px,100%);background:#0b2118;border:1px solid #28ed9135;border-radius:22px;padding:25px;box-shadow:0 25px 80px #000}.modal-box h2{font-size:20px}.modal-box p{color:var(--muted);font-size:13px;margin:6px 0 18px}.modal-box input{width:100%;padding:14px;border-radius:13px;border:1px solid #28ed9130;background:#0005;color:#fff;font-size:16px;outline:0}.modal-actions{display:flex;gap:10px}.modal-actions button{flex:1;width:auto}.cancel{background:#162d24;color:#b5c9c0}
 @media(max-width:600px){.page{padding-top:20px}.requests{padding:17px}.stats{align-items:flex-start}}
+  .sidebar{
+    width:260px;
+    height:100vh;
+    position:fixed;
+    top:0;
+    right:0;
+    background:#43B5FF;
+    color:#fff;
+    box-shadow:0 0 15px rgba(0,0,0,.15);
+}
+
+.logo{
+    padding:25px;
+    text-align:center;
+    font-size:22px;
+    font-weight:bold;
+    border-bottom:1px solid rgba(255,255,255,.2);
+}
+
+.sidebar ul{
+    list-style:none;
+    margin-top:20px;
+}
+
+.sidebar ul li{
+    margin:10px;
+}
+
+.sidebar ul li a{
+
+    color:white;
+
+    text-decoration:none;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
+
+    padding:15px;
+
+    border-radius:12px;
+
+    transition:.3s;
+
+}
+
+.sidebar ul li a:hover{
+
+    background:white;
+
+    color:#2196F3;
+
+}
+
+.sidebar ul li.active a{
+
+    background:white;
+
+    color:#2196F3;
+
+}
 </style>
 </head>
 <body>
