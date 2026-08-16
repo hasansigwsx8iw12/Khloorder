@@ -1,0 +1,11 @@
+{
+  "rules": {
+    "compensationRequests": {
+      "$nationalId": {
+        ".read": true,
+        ".write": "!data.exists() && newData.exists() && newData.child('nationalId').val() === $nationalId",
+        ".validate": "newData.hasChildren(['fullName','nationalId','status','compensationDays','createdAt']) && newData.child('fullName').isString() && newData.child('nationalId').isString() && newData.child('status').isString() && newData.child('compensationDays').isNumber()"
+      }
+    }
+  }
+}
