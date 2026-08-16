@@ -13,102 +13,230 @@ body{min-height:100vh;font-family:Arial,Tahoma,sans-serif;color:var(--text);back
 .accept-btn{width:auto;margin:0;padding:9px 13px;font-size:12px}.accepted{display:inline-block;color:var(--green);font-weight:bold;font-size:12px}
 .modal{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;padding:20px;z-index:10}.modal.hidden{display:none}.modal-box{width:min(430px,100%);background:#0b2118;border:1px solid #28ed9135;border-radius:22px;padding:25px;box-shadow:0 25px 80px #000}.modal-box h2{font-size:20px}.modal-box p{color:var(--muted);font-size:13px;margin:6px 0 18px}.modal-box input{width:100%;padding:14px;border-radius:13px;border:1px solid #28ed9130;background:#0005;color:#fff;font-size:16px;outline:0}.modal-actions{display:flex;gap:10px}.modal-actions button{flex:1;width:auto}.cancel{background:#162d24;color:#b5c9c0}
 @media(max-width:600px){.page{padding-top:20px}.requests{padding:17px}.stats{align-items:flex-start}}
-  /* =========================
-   SIDEBAR
+ /* =========================
+   SIDEBAR - KHLLO NET
 ========================= */
 
 .sidebar{
     width:260px;
     height:100vh;
+
     position:fixed;
     top:0;
     right:0;
+
     background:#0b2118;
-    color: #0000;
-    border-left:1px solid #28ed9125;
+    color:#fff;
+
+    border-left:1px solid rgba(40,237,145,.15);
+
     box-shadow:0 0 25px rgba(0,0,0,.35);
-    z-index:20;
+
+    z-index:1000;
 }
 
+
+/* =========================
+   SIDEBAR LOGO
+========================= */
+
 .sidebar .side-logo{
-    padding:25px 20px;
-    text-align:center;
+    height:90px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    color:#fff;
+
     font-size:22px;
     font-weight:bold;
-    color:#28ed91;
-    border-bottom:1px solid rgba(40,237,145,.15);
+
+    border-bottom:1px solid rgba(255,255,255,.15);
 }
+
+
+/* =========================
+   SIDEBAR MENU
+========================= */
 
 .sidebar ul{
     list-style:none;
-    margin-top:20px;
+
+    margin:20px 0 0;
     padding:0 10px;
 }
+
 
 .sidebar ul li{
     margin:8px 0;
 }
 
+
+/* =========================
+   MENU LINKS
+========================= */
+
 .sidebar ul li a{
-    color:#28ed91
+
+    color:#fff;
+
     text-decoration:none;
+
     display:flex;
+
     align-items:center;
+
     gap:15px;
+
     padding:14px 16px;
+
     border-radius:12px;
-    transition:.3s;
+
+    transition:all .3s ease;
+
+    font-size:15px;
+
 }
+
+
+/* =========================
+   HOVER
+========================= */
 
 .sidebar ul li a:hover{
-    background:#28ed9115;
-    color:#28ed91;
+
+    background:rgba(40,237,145,.15);
+
+    color:#fff;
+
+    transform:translateX(-3px);
+
 }
+
+
+/* =========================
+   ACTIVE
+========================= */
 
 .sidebar ul li.active a{
+
     background:#28ed91;
-    color:#03140d;
+
+    color:#fff;
+
+    box-shadow:0 5px 20px rgba(40,237,145,.2);
+
 }
 
-/* محتوى الصفحة بجانب القائمة */
+
+/* =========================
+   ICON
+========================= */
+
+.sidebar ul li a i{
+
+    width:22px;
+
+    text-align:center;
+
+    font-size:18px;
+
+    color:#fff;
+
+}
+
+
+/* =========================
+   PAGE CONTENT
+========================= */
 
 .page{
+
     width:calc(100% - 260px);
+
     margin-right:260px;
+
     padding:30px;
+
 }
 
-/* موبايل */
+
+/* =========================
+   MOBILE
+========================= */
 
 @media(max-width:700px){
 
     .sidebar{
+
         width:75px;
+
     }
+
 
     .sidebar .side-logo{
+
         font-size:0;
+
+        height:75px;
+
     }
+
 
     .sidebar .side-logo::after{
+
         content:"K";
-        font-size:25px;
-        color:#28ed91;
+
+        font-size:26px;
+
+        font-weight:bold;
+
+        color:#fff;
+
     }
+
+
+    .sidebar ul{
+
+        padding:0 8px;
+
+    }
+
 
     .sidebar ul li a{
+
         justify-content:center;
-        font-size:0;
+
+        padding:14px 8px;
+
+        gap:0;
+
     }
+
 
     .sidebar ul li a span{
+
         display:none;
+
     }
 
+
+    .sidebar ul li a i{
+
+        font-size:20px;
+
+    }
+
+
     .page{
+
         width:calc(100% - 75px);
+
         margin-right:75px;
+
         padding:15px;
+
     }
 
 }
