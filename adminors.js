@@ -1,4 +1,4 @@
-import { database } from "./firebase.js";
+import { database } from "./firebaseord.js";
 import {
   ref,
   get,
