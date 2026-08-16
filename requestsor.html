@@ -13,67 +13,103 @@ body{min-height:100vh;font-family:Arial,Tahoma,sans-serif;color:var(--text);back
 .accept-btn{width:auto;margin:0;padding:9px 13px;font-size:12px}.accepted{display:inline-block;color:var(--green);font-weight:bold;font-size:12px}
 .modal{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;padding:20px;z-index:10}.modal.hidden{display:none}.modal-box{width:min(430px,100%);background:#0b2118;border:1px solid #28ed9135;border-radius:22px;padding:25px;box-shadow:0 25px 80px #000}.modal-box h2{font-size:20px}.modal-box p{color:var(--muted);font-size:13px;margin:6px 0 18px}.modal-box input{width:100%;padding:14px;border-radius:13px;border:1px solid #28ed9130;background:#0005;color:#fff;font-size:16px;outline:0}.modal-actions{display:flex;gap:10px}.modal-actions button{flex:1;width:auto}.cancel{background:#162d24;color:#b5c9c0}
 @media(max-width:600px){.page{padding-top:20px}.requests{padding:17px}.stats{align-items:flex-start}}
-  .sidebar{
+  /* =========================
+   SIDEBAR
+========================= */
+
+.sidebar{
     width:260px;
     height:100vh;
     position:fixed;
     top:0;
     right:0;
-    background:#43B5FF;
+    background:#0b2118;
     color:#fff;
-    box-shadow:0 0 15px rgba(0,0,0,.15);
+    border-left:1px solid #28ed9125;
+    box-shadow:0 0 25px rgba(0,0,0,.35);
+    z-index:20;
 }
 
-.logo{
-    padding:25px;
+.sidebar .side-logo{
+    padding:25px 20px;
     text-align:center;
     font-size:22px;
     font-weight:bold;
-    border-bottom:1px solid rgba(255,255,255,.2);
+    color:#28ed91;
+    border-bottom:1px solid rgba(40,237,145,.15);
 }
 
 .sidebar ul{
     list-style:none;
     margin-top:20px;
+    padding:0 10px;
 }
 
 .sidebar ul li{
-    margin:10px;
+    margin:8px 0;
 }
 
 .sidebar ul li a{
-
-    color:white;
-
+    color:#91afa1;
     text-decoration:none;
-
     display:flex;
-
     align-items:center;
-
     gap:15px;
-
-    padding:15px;
-
+    padding:14px 16px;
     border-radius:12px;
-
     transition:.3s;
-
 }
 
 .sidebar ul li a:hover{
-
-    background:white;
-
-    color:#2196F3;
-
+    background:#28ed9115;
+    color:#28ed91;
 }
 
 .sidebar ul li.active a{
+    background:#28ed91;
+    color:#03140d;
+}
 
-    background:white;
+/* محتوى الصفحة بجانب القائمة */
 
-    color:#2196F3;
+.page{
+    width:calc(100% - 260px);
+    margin-right:260px;
+    padding:30px;
+}
+
+/* موبايل */
+
+@media(max-width:700px){
+
+    .sidebar{
+        width:75px;
+    }
+
+    .sidebar .side-logo{
+        font-size:0;
+    }
+
+    .sidebar .side-logo::after{
+        content:"K";
+        font-size:25px;
+        color:#28ed91;
+    }
+
+    .sidebar ul li a{
+        justify-content:center;
+        font-size:0;
+    }
+
+    .sidebar ul li a span{
+        display:none;
+    }
+
+    .page{
+        width:calc(100% - 75px);
+        margin-right:75px;
+        padding:15px;
+    }
 
 }
 </style>
