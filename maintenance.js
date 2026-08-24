@@ -32,48 +32,76 @@ let currentUser = null;
 let employees = {};
 
 
+// هل تم تحميل الموظفين؟
+let employeesLoaded = false;
+
+
 // ==========================================
 // تسجيل الدخول
 // ==========================================
 
 onAuthStateChanged(auth, async (user) => {
 
-    if (user) {
-
-        currentUser = user;
-
-        console.log(
-            "المستخدم الحالي:",
-            user.uid
-        );
-
-        // تحميل الموظفين
-        await loadEmployees();
-
-    } else {
+    if (!user) {
 
         currentUser = null;
 
         console.log(
-            "لا يوجد مستخدم مسجل دخول"
+            "❌ لا يوجد مستخدم مسجل دخول"
         );
 
+        return;
+
     }
+
+
+    currentUser = user;
+
+
+    console.log(
+        "👤 المستخدم الحالي:",
+        user.uid
+    );
+
+
+    // تحميل الموظفين
+
+    await loadEmployees();
+
+
+    console.log(
+        "👥 الموظفون جاهزون للاستخدام"
+    );
 
 });
 
 
 // ==========================================
-// تحميل الموظفين
+// تحميل الموظفين من Firebase
 // ==========================================
 
 async function loadEmployees() {
 
+    employeesLoaded = false;
+
+
     try {
+
+        console.log(
+            "🔄 جاري تحميل الموظفين من Firebase..."
+        );
+
+
+        const employeesRef =
+            ref(
+                db,
+                "employees"
+            );
+
 
         const snapshot =
             await get(
-                ref(db, "employees")
+                employeesRef
             );
 
 
@@ -81,9 +109,13 @@ async function loadEmployees() {
 
             employees = {};
 
-            console.log(
-                "لا يوجد موظفون"
+            employeesLoaded = true;
+
+
+            console.warn(
+                "⚠️ لا يوجد موظفين داخل employees"
             );
+
 
             return;
 
@@ -94,20 +126,34 @@ async function loadEmployees() {
             snapshot.val() || {};
 
 
+        employeesLoaded = true;
+
+
         console.log(
-            "تم تحميل الموظفين:",
+            "✅ تم تحميل الموظفين:",
             employees
         );
 
 
-    } catch (error) {
+        console.log(
+            "👥 عدد الموظفين:",
+            Object.keys(employees).length
+        );
+
+
+    }
+
+    catch (error) {
 
         console.error(
-            "خطأ تحميل الموظفين:",
+            "❌ خطأ تحميل الموظفين:",
             error
         );
 
+
         employees = {};
+
+        employeesLoaded = false;
 
     }
 
@@ -115,7 +161,7 @@ async function loadEmployees() {
 
 
 // ==========================================
-// التحقق من المدير
+// التأكد أن المستخدم Admin
 // ==========================================
 
 function isAdmin() {
@@ -128,20 +174,120 @@ function isAdmin() {
 
 
 // ==========================================
-// إظهار النموذج
+// التأكد من تسجيل الدخول
 // ==========================================
 
-window.showForm = function(type) {
+function checkUser() {
 
-    // ======================================
-    // حماية
-    // ======================================
+    if (!currentUser) {
+
+        alert(
+            "❌ يجب تسجيل الدخول أولاً"
+        );
+
+        return false;
+
+    }
+
+
+    return true;
+
+}
+
+
+// ==========================================
+// التأكد من Admin
+// ==========================================
+
+function checkAdmin() {
 
     if (!isAdmin()) {
 
         alert(
             "❌ ليس لديك صلاحية إضافة طلب"
         );
+
+        return false;
+
+    }
+
+
+    return true;
+
+}
+
+
+// ==========================================
+// إظهار النموذج
+// ==========================================
+
+window.showForm = async function(type) {
+
+
+    // ======================================
+    // التأكد من تسجيل الدخول
+    // ======================================
+
+    if (!checkUser()) {
+
+        return;
+
+    }
+
+
+    // ======================================
+    // التأكد من الصلاحية
+    // ======================================
+
+    if (!checkAdmin()) {
+
+        return;
+
+    }
+
+
+    // ======================================
+    // التأكد من تحميل الموظفين
+    // ======================================
+
+    if (!employeesLoaded) {
+
+        console.log(
+            "⏳ الموظفون لم يكتمل تحميلهم..."
+        );
+
+
+        // محاولة تحميلهم مرة ثانية
+
+        await loadEmployees();
+
+    }
+
+
+    // ======================================
+    // التأكد من وجود موظفين
+    // ======================================
+
+    if (
+        Object.keys(employees).length === 0
+    ) {
+
+        alert(
+
+            "❌ لم يتم العثور على أي موظفين\n\n" +
+
+            "تأكد من وجود الموظفين داخل:\n" +
+
+            "employees"
+
+        );
+
+
+        console.error(
+            "employees فارغة:",
+            employees
+        );
+
 
         return;
 
@@ -157,7 +303,7 @@ window.showForm = function(type) {
     if (!box) {
 
         console.error(
-            "formArea غير موجود"
+            "❌ formArea غير موجود"
         );
 
         return;
@@ -169,11 +315,15 @@ window.showForm = function(type) {
     // صيانة
     // ======================================
 
-    if (type === "maintenance") {
+    if (
+        type === "maintenance"
+    ) {
 
         box.innerHTML = `
 
-            <h2>🛠 طلب صيانة</h2>
+            <h2>
+                🛠 طلب صيانة
+            </h2>
 
 
             <label>
@@ -230,25 +380,39 @@ window.showForm = function(type) {
             >
 
 
+            <!-- ==========================
+                 المكلف
+            =========================== -->
+
             <label>
-                المكلف بالطلب
+                👤 الموظف المكلف بالطلب
             </label>
 
             ${createEmployeeSelect()}
 
 
+            <!-- ==========================
+                 عيار الصحن
+            =========================== -->
+
             <label>
+
                 <input
                     type="checkbox"
                     id="dishCheck"
                 >
 
                 عيار الصحن
+
             </label>
 
 
             <div id="dishBox"></div>
 
+
+            <!-- ==========================
+                 النقل
+            =========================== -->
 
             <label>
                 النقل
@@ -265,7 +429,9 @@ window.showForm = function(type) {
                 id="saveMaintenanceBtn"
             >
 
-                <i class="fa-solid fa-floppy-disk"></i>
+                <i
+                    class="fa-solid fa-floppy-disk"
+                ></i>
 
                 حفظ الطلب
 
@@ -275,7 +441,9 @@ window.showForm = function(type) {
 
 
         document
-            .getElementById("dishCheck")
+            .getElementById(
+                "dishCheck"
+            )
             ?.addEventListener(
                 "change",
                 dishOption
@@ -283,7 +451,9 @@ window.showForm = function(type) {
 
 
         document
-            .getElementById("saveMaintenanceBtn")
+            .getElementById(
+                "saveMaintenanceBtn"
+            )
             ?.addEventListener(
                 "click",
                 saveMaintenance
@@ -300,13 +470,19 @@ window.showForm = function(type) {
     // ======================================
 
     if (
+
         type === "install" ||
+
         type === "transfer"
+
     ) {
 
         const title =
+
             type === "install"
+
                 ? "📡 طلب تركيبة"
+
                 : "🔄 طلب قلبة";
 
 
@@ -394,8 +570,12 @@ window.showForm = function(type) {
             >
 
 
+            <!-- ==========================
+                 المكلف
+            =========================== -->
+
             <label>
-                المكلف بالطلب
+                👤 الموظف المكلف بالطلب
             </label>
 
             ${createEmployeeSelect()}
@@ -405,7 +585,9 @@ window.showForm = function(type) {
                 id="saveInstallBtn"
             >
 
-                <i class="fa-solid fa-floppy-disk"></i>
+                <i
+                    class="fa-solid fa-floppy-disk"
+                ></i>
 
                 حفظ الطلب
 
@@ -415,7 +597,9 @@ window.showForm = function(type) {
 
 
         document
-            .getElementById("saveInstallBtn")
+            .getElementById(
+                "saveInstallBtn"
+            )
             ?.addEventListener(
                 "click",
                 () => saveInstallation(type)
@@ -432,6 +616,7 @@ window.showForm = function(type) {
 
 function createEmployeeSelect() {
 
+
     let options = `
 
         <option value="">
@@ -441,20 +626,34 @@ function createEmployeeSelect() {
     `;
 
 
-    Object.entries(employees || {})
-        .forEach(([uid, employee]) => {
+    Object.entries(
+        employees || {}
+    )
 
-            if (!employee) return;
+    .forEach(
+        ([uid, employee]) => {
+
+
+            if (!employee) {
+
+                return;
+
+            }
 
 
             const name =
+
                 employee.name ||
+
                 "موظف بدون اسم";
 
 
             const role =
+
                 employee.role === "admin"
+
                     ? "مدير"
+
                     : "موظف";
 
 
@@ -465,18 +664,24 @@ function createEmployeeSelect() {
                 >
 
                     ${escapeHtml(name)}
-                    - ${role}
+
+                    -
+
+                    ${role}
 
                 </option>
 
             `;
 
-        });
+        }
+    );
 
 
     return `
 
-        <select id="assignedTo">
+        <select
+            id="assignedTo"
+        >
 
             ${options}
 
@@ -492,6 +697,7 @@ function createEmployeeSelect() {
 // ==========================================
 
 function getAssignedEmployee() {
+
 
     const select =
         document.getElementById(
@@ -523,6 +729,12 @@ function getAssignedEmployee() {
 
     if (!employee) {
 
+        console.error(
+            "❌ الموظف غير موجود:",
+            uid
+        );
+
+
         return null;
 
     }
@@ -530,16 +742,20 @@ function getAssignedEmployee() {
 
     return {
 
-        uid: uid,
+        uid:
+            uid,
 
         name:
-            employee.name || "غير معروف",
+            employee.name ||
+            "غير معروف",
 
         email:
-            employee.email || "",
+            employee.email ||
+            "",
 
         role:
-            employee.role || "employee"
+            employee.role ||
+            "employee"
 
     };
 
@@ -551,6 +767,7 @@ function getAssignedEmployee() {
 // ==========================================
 
 function dishOption() {
+
 
     const check =
         document.getElementById(
@@ -564,7 +781,14 @@ function dishOption() {
         );
 
 
-    if (!check || !box) return;
+    if (
+        !check ||
+        !box
+    ) {
+
+        return;
+
+    }
 
 
     if (check.checked) {
@@ -583,7 +807,9 @@ function dishOption() {
 
         `;
 
-    } else {
+    }
+
+    else {
 
         box.innerHTML = "";
 
@@ -598,79 +824,47 @@ function dishOption() {
 
 function value(id) {
 
+
     const element =
-        document.getElementById(id);
+        document.getElementById(
+            id
+        );
 
 
     return element
+
         ? element.value.trim()
+
         : "";
 
 }
 
 
 // ==========================================
-// التحقق من تسجيل الدخول
-// ==========================================
-
-function checkUser() {
-
-    if (!currentUser) {
-
-        alert(
-            "يجب تسجيل الدخول أولاً"
-        );
-
-        return false;
-
-    }
-
-
-    return true;
-
-}
-
-
-// ==========================================
-// التحقق من صلاحية Admin
-// ==========================================
-
-function checkAdmin() {
-
-    if (!isAdmin()) {
-
-        alert(
-            "❌ ليس لديك صلاحية إضافة طلب"
-        );
-
-        return false;
-
-    }
-
-
-    return true;
-
-}
-
-
-// ==========================================
-// معلومات الموظف
+// معلومات الموظف الذي أنشأ الطلب
 // ==========================================
 
 function employeeData() {
 
+
     return {
 
         uid:
-            currentUser?.uid || "",
+            currentUser?.uid ||
+            "",
+
 
         email:
-            currentUser?.email || "",
+            currentUser?.email ||
+            "",
+
 
         name:
             localStorage.getItem(
                 "employeeName"
-            ) || "غير معروف"
+            ) ||
+
+            "غير معروف"
 
     };
 
@@ -683,12 +877,27 @@ function employeeData() {
 
 async function saveMaintenance() {
 
-    if (!checkUser()) return;
 
-    if (!checkAdmin()) return;
+    if (!checkUser()) {
+
+        return;
+
+    }
+
+
+    if (!checkAdmin()) {
+
+        return;
+
+    }
 
 
     try {
+
+
+        // ==================================
+        // البيانات
+        // ==================================
 
         const name =
             value("name");
@@ -802,6 +1011,10 @@ async function saveMaintenance() {
         }
 
 
+        // ==================================
+        // مقدم الطلب
+        // ==================================
+
         const employee =
             employeeData();
 
@@ -825,6 +1038,7 @@ async function saveMaintenance() {
 
         const requestData = {
 
+
             id:
                 requestRef.key,
 
@@ -847,8 +1061,11 @@ async function saveMaintenance() {
 
 
             dish:
+
                 dishCheck
+
                     ? dishCheck.checked
+
                     : false,
 
 
@@ -887,24 +1104,21 @@ async function saveMaintenance() {
             // المكلف
             // ==================================
 
-            assignedTo:
+            assignedTo: {
 
+                uid:
+                    assignedTo.uid,
 
-                {
+                name:
+                    assignedTo.name,
 
-                    uid:
-                        assignedTo.uid,
+                email:
+                    assignedTo.email,
 
-                    name:
-                        assignedTo.name,
+                role:
+                    assignedTo.role
 
-                    email:
-                        assignedTo.email,
-
-                    role:
-                        assignedTo.role
-
-                },
+            },
 
 
             assignedAt:
@@ -941,6 +1155,10 @@ async function saveMaintenance() {
         };
 
 
+        // ==================================
+        // حفظ
+        // ==================================
+
         await set(
             requestRef,
             requestData
@@ -964,7 +1182,10 @@ async function saveMaintenance() {
         );
 
 
-    } catch (error) {
+    }
+
+    catch (error) {
+
 
         console.error(
             "❌ خطأ إنشاء الصيانة:",
@@ -991,12 +1212,27 @@ async function saveMaintenance() {
 
 async function saveInstallation(type) {
 
-    if (!checkUser()) return;
 
-    if (!checkAdmin()) return;
+    if (!checkUser()) {
+
+        return;
+
+    }
+
+
+    if (!checkAdmin()) {
+
+        return;
+
+    }
 
 
     try {
+
+
+        // ==================================
+        // البيانات
+        // ==================================
 
         const name =
             value("name");
@@ -1090,8 +1326,11 @@ async function saveInstallation(type) {
 
 
         if (
+
             type === "install" &&
+
             !installType
+
         ) {
 
             alert(
@@ -1114,9 +1353,17 @@ async function saveInstallation(type) {
         }
 
 
+        // ==================================
+        // مقدم الطلب
+        // ==================================
+
         const employee =
             employeeData();
 
+
+        // ==================================
+        // إنشاء الطلب
+        // ==================================
 
         const requestRef =
             push(
@@ -1132,6 +1379,7 @@ async function saveInstallation(type) {
 
 
         const requestData = {
+
 
             id:
                 requestRef.key,
@@ -1194,23 +1442,21 @@ async function saveInstallation(type) {
             // المكلف
             // ==================================
 
-            assignedTo:
+            assignedTo: {
 
-                {
+                uid:
+                    assignedTo.uid,
 
-                    uid:
-                        assignedTo.uid,
+                name:
+                    assignedTo.name,
 
-                    name:
-                        assignedTo.name,
+                email:
+                    assignedTo.email,
 
-                    email:
-                        assignedTo.email,
+                role:
+                    assignedTo.role
 
-                    role:
-                        assignedTo.role
-
-                },
+            },
 
 
             assignedAt:
@@ -1247,6 +1493,10 @@ async function saveInstallation(type) {
         };
 
 
+        // ==================================
+        // حفظ
+        // ==================================
+
         await set(
             requestRef,
             requestData
@@ -1276,7 +1526,10 @@ async function saveInstallation(type) {
         );
 
 
-    } catch (error) {
+    }
+
+    catch (error) {
+
 
         console.error(
             "❌ خطأ إنشاء الطلب:",
@@ -1306,13 +1559,18 @@ function showSuccess(
     assignedName
 ) {
 
+
     const box =
         document.getElementById(
             "formArea"
         );
 
 
-    if (!box) return;
+    if (!box) {
+
+        return;
+
+    }
 
 
     box.innerHTML = `
@@ -1375,9 +1633,13 @@ function showSuccess(
 
 function escapeHtml(value) {
 
+
     if (
+
         value === undefined ||
+
         value === null
+
     ) {
 
         return "";
