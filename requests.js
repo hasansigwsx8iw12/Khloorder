@@ -32,6 +32,34 @@ let selectedRequestId = null;
 
 
 // ==========================================
+// معلومات المستخدم
+// ==========================================
+
+function getCurrentRole() {
+
+    return localStorage.getItem("role") || "";
+
+}
+
+
+function getCurrentEmployeeName() {
+
+    return (
+        localStorage.getItem("employeeName") ||
+        "غير معروف"
+    );
+
+}
+
+
+function isAdmin() {
+
+    return getCurrentRole() === "admin";
+
+}
+
+
+// ==========================================
 // تسجيل الدخول
 // ==========================================
 
@@ -39,13 +67,29 @@ onAuthStateChanged(auth, (user) => {
 
     if (!user) {
 
-        console.log("لا يوجد مستخدم مسجل");
+        console.log(
+            "لا يوجد مستخدم مسجل"
+        );
 
         return;
 
     }
 
+
     currentUser = user;
+
+
+    console.log(
+        "المستخدم الحالي:",
+        user.uid
+    );
+
+
+    console.log(
+        "الصلاحية:",
+        getCurrentRole()
+    );
+
 
     loadRequests();
 
@@ -59,7 +103,10 @@ onAuthStateChanged(auth, (user) => {
 function loadRequests() {
 
     const requestsRef =
-        ref(db, "requests");
+        ref(
+            db,
+            "requests"
+        );
 
 
     onValue(
@@ -71,13 +118,16 @@ function loadRequests() {
             if (snapshot.exists()) {
 
                 allRequests =
-                    snapshot.val();
+                    snapshot.val() || {};
 
-            } else {
+            }
+
+            else {
 
                 allRequests = {};
 
             }
+
 
             renderRequests();
 
@@ -90,10 +140,12 @@ function loadRequests() {
                 error
             );
 
+
             const grid =
                 document.getElementById(
                     "requestsGrid"
                 );
+
 
             if (grid) {
 
@@ -121,6 +173,72 @@ function loadRequests() {
 
 
 // ==========================================
+// الحصول على الطلبات المسموحة للمستخدم
+// ==========================================
+
+function getVisibleRequests() {
+
+    const requests =
+
+        Object.entries(
+            allRequests || {}
+        )
+
+        .map(
+            ([id, request]) => {
+
+                return {
+
+                    ...request,
+
+                    id: id
+
+                };
+
+            }
+
+        );
+
+
+    // ======================================
+    // Admin يشوف كل الطلبات
+    // ======================================
+
+    if (isAdmin()) {
+
+        return requests;
+
+    }
+
+
+    // ======================================
+    // الموظف العادي
+    // يشوف فقط الطلبات المكلف بها
+    // ======================================
+
+    if (!currentUser) {
+
+        return [];
+
+    }
+
+
+    return requests.filter(
+        request => {
+
+            return (
+                request.assignedTo &&
+                request.assignedTo.uid ===
+                currentUser.uid
+            );
+
+        }
+    );
+
+}
+
+
+// ==========================================
 // رسم الطلبات
 // ==========================================
 
@@ -135,41 +253,44 @@ function renderRequests() {
     if (!grid) return;
 
 
-    const requests =
-        Object.entries(
-            allRequests || {}
-        )
-
-        .map(([id, request]) => {
-
-            return {
-
-                ...request,
-
-                id: id
-
-            };
-
-        })
-
-        .sort(
-
-            (a, b) =>
-
-                (b.createdAt || 0) -
-                (a.createdAt || 0)
-
-        );
+    let requests =
+        getVisibleRequests();
 
 
-    updateStats(requests);
+    // ======================================
+    // ترتيب من الأحدث إلى الأقدم
+    // ======================================
 
+    requests.sort(
+
+        (a, b) =>
+
+            (b.createdAt || 0) -
+            (a.createdAt || 0)
+
+    );
+
+
+    // ======================================
+    // الإحصائيات
+    // ======================================
+
+    updateStats(
+        requests
+    );
+
+
+    // ======================================
+    // الفلترة
+    // ======================================
 
     let filtered =
         requests;
 
 
-    if (currentFilter !== "all") {
+    if (
+        currentFilter !== "all"
+    ) {
 
         filtered =
             requests.filter(
@@ -183,6 +304,10 @@ function renderRequests() {
 
     }
 
+
+    // ======================================
+    // لا يوجد طلبات
+    // ======================================
 
     if (!filtered.length) {
 
@@ -205,18 +330,19 @@ function renderRequests() {
     }
 
 
+    // ======================================
+    // عرض الطلبات
+    // ======================================
+
     grid.innerHTML =
 
         filtered
 
             .map(
-
                 request =>
-
                     createRequestBox(
                         request
                     )
-
             )
 
             .join("");
@@ -239,25 +365,22 @@ function updateStats(requests) {
 
     const newCount =
         requests.filter(
-
-            r => r.status === "new"
-
+            r =>
+                r.status === "new"
         ).length;
 
 
     const receivedCount =
         requests.filter(
-
-            r => r.status === "received"
-
+            r =>
+                r.status === "received"
         ).length;
 
 
     const readyCount =
         requests.filter(
-
-            r => r.status === "ready"
-
+            r =>
+                r.status === "ready"
         ).length;
 
 
@@ -291,10 +414,15 @@ function updateStats(requests) {
 // تغيير النص
 // ==========================================
 
-function setText(id, value) {
+function setText(
+    id,
+    value
+) {
 
     const element =
-        document.getElementById(id);
+        document.getElementById(
+            id
+        );
 
 
     if (element) {
@@ -313,7 +441,9 @@ function setText(id, value) {
 
 function getTypeInfo(type) {
 
-    if (type === "maintenance") {
+    if (
+        type === "maintenance"
+    ) {
 
         return {
 
@@ -327,7 +457,9 @@ function getTypeInfo(type) {
     }
 
 
-    if (type === "install") {
+    if (
+        type === "install"
+    ) {
 
         return {
 
@@ -341,7 +473,9 @@ function getTypeInfo(type) {
     }
 
 
-    if (type === "transfer") {
+    if (
+        type === "transfer"
+    ) {
 
         return {
 
@@ -373,7 +507,9 @@ function getTypeInfo(type) {
 
 function getStatusInfo(status) {
 
-    if (status === "received") {
+    if (
+        status === "received"
+    ) {
 
         return {
 
@@ -388,7 +524,9 @@ function getStatusInfo(status) {
     }
 
 
-    if (status === "ready") {
+    if (
+        status === "ready"
+    ) {
 
         return {
 
@@ -438,7 +576,7 @@ function createRequestBox(request) {
 
         <div
             class="request-box"
-            data-id="${request.id}"
+            data-id="${escapeHtml(request.id)}"
         >
 
             <div class="request-head">
@@ -631,9 +769,7 @@ function createRequestBox(request) {
     // ======================================
 
     if (
-
-        request.receivedBy?.name
-
+        request.assignedTo?.name
     ) {
 
         html += `
@@ -641,15 +777,48 @@ function createRequestBox(request) {
                 <div>
 
                     <span>
-                        المكلف
+                        المكلف بالطلب
+                    </span>
+
+                    <strong>
+
+                        <i
+                            class="fa-solid fa-user-check"
+                        ></i>
+
+                        ${escapeHtml(
+                            request.assignedTo.name
+                        )}
+
+                    </strong>
+
+                </div>
+
+        `;
+
+    }
+
+
+    // ======================================
+    // الموظف الذي استلم الطلب
+    // ======================================
+
+    if (
+        request.receivedBy?.name
+    ) {
+
+        html += `
+
+                <div>
+
+                    <span>
+                        استلم الطلب
                     </span>
 
                     <strong>
 
                         ${escapeHtml(
-
                             request.receivedBy.name
-
                         )}
 
                     </strong>
@@ -714,12 +883,12 @@ function createRequestBox(request) {
     `;
 
 
+    // ======================================
     // طلب جديد
+    // ======================================
 
     if (
-
         request.status === "new"
-
     ) {
 
         html += `
@@ -730,7 +899,7 @@ function createRequestBox(request) {
 
                 data-action="receive"
 
-                data-id="${request.id}"
+                data-id="${escapeHtml(request.id)}"
 
             >
 
@@ -745,12 +914,12 @@ function createRequestBox(request) {
     }
 
 
+    // ======================================
     // تم الاستلام
+    // ======================================
 
     if (
-
         request.status === "received"
-
     ) {
 
         html += `
@@ -761,7 +930,7 @@ function createRequestBox(request) {
 
                 data-action="ready"
 
-                data-id="${request.id}"
+                data-id="${escapeHtml(request.id)}"
 
             >
 
@@ -776,12 +945,12 @@ function createRequestBox(request) {
     }
 
 
+    // ======================================
     // جاهز
+    // ======================================
 
     if (
-
         request.status === "ready"
-
     ) {
 
         html += `
@@ -792,7 +961,7 @@ function createRequestBox(request) {
 
                 data-action="details"
 
-                data-id="${request.id}"
+                data-id="${escapeHtml(request.id)}"
 
             >
 
@@ -817,6 +986,45 @@ function createRequestBox(request) {
 
 
     return html;
+
+}
+
+
+// ==========================================
+// التحقق أن المستخدم مسموح له بالطلب
+// ==========================================
+
+function canAccessRequest(request) {
+
+    if (!request) {
+
+        return false;
+
+    }
+
+
+    // Admin يستطيع الوصول للجميع
+
+    if (isAdmin()) {
+
+        return true;
+
+    }
+
+
+    // الموظف يجب أن يكون هو المكلف
+
+    if (!currentUser) {
+
+        return false;
+
+    }
+
+
+    return (
+        request.assignedTo?.uid ===
+        currentUser.uid
+    );
 
 }
 
@@ -850,9 +1058,7 @@ function attachButtons() {
 
 
                     if (
-
                         action === "receive"
-
                     ) {
 
                         receiveRequest(id);
@@ -861,9 +1067,7 @@ function attachButtons() {
 
 
                     if (
-
                         action === "ready"
-
                     ) {
 
                         openDetails(id);
@@ -872,9 +1076,7 @@ function attachButtons() {
 
 
                     if (
-
                         action === "details"
-
                     ) {
 
                         showCompletedDetails(id);
@@ -922,10 +1124,25 @@ async function receiveRequest(id) {
     }
 
 
+    // ======================================
+    // حماية الطلب
+    // ======================================
+
     if (
+        !canAccessRequest(request)
+    ) {
 
+        alert(
+            "❌ هذا الطلب ليس مكلفاً لك"
+        );
+
+        return;
+
+    }
+
+
+    if (
         request.status !== "new"
-
     ) {
 
         return;
@@ -942,9 +1159,7 @@ async function receiveRequest(id) {
             currentUser.email || "",
 
         name:
-            localStorage.getItem(
-                "employeeName"
-            ) || "غير معروف"
+            getCurrentEmployeeName()
 
     };
 
@@ -988,6 +1203,7 @@ async function receiveRequest(id) {
             error
         );
 
+
         alert(
 
             "حدث خطأ أثناء استلام الطلب:\n" +
@@ -1012,6 +1228,23 @@ function openDetails(id) {
 
 
     if (!request) return;
+
+
+    // ======================================
+    // حماية
+    // ======================================
+
+    if (
+        !canAccessRequest(request)
+    ) {
+
+        alert(
+            "❌ هذا الطلب ليس مكلفاً لك"
+        );
+
+        return;
+
+    }
 
 
     selectedRequestId =
@@ -1048,19 +1281,29 @@ function openDetails(id) {
         );
 
 
-    if (!modal ||
+    if (
+
+        !modal ||
+
         !title ||
+
         !sub ||
+
         !problemField ||
-        !sectorField) {
+
+        !sectorField
+
+    ) {
 
         console.error(
             "❌ عناصر Modal ناقصة في requests.html"
         );
 
+
         alert(
             "يوجد خطأ في نافذة تفاصيل التنفيذ"
         );
+
 
         return;
 
@@ -1072,16 +1315,16 @@ function openDetails(id) {
     // ======================================
 
     if (
-
         request.type === "maintenance"
-
     ) {
 
         title.textContent =
             "🛠 إنهاء طلب الصيانة";
 
+
         problemField.style.display =
             "block";
+
 
         sectorField.style.display =
             "none";
@@ -1089,16 +1332,16 @@ function openDetails(id) {
     }
 
     else if (
-
         request.type === "install"
-
     ) {
 
         title.textContent =
             "📡 إنهاء طلب التركيبة";
 
+
         problemField.style.display =
             "none";
+
 
         sectorField.style.display =
             "block";
@@ -1110,8 +1353,10 @@ function openDetails(id) {
         title.textContent =
             "🔄 إنهاء طلب القلبة";
 
+
         problemField.style.display =
             "none";
+
 
         sectorField.style.display =
             "block";
@@ -1124,7 +1369,7 @@ function openDetails(id) {
 
 
     // ======================================
-    // تعبئة الحقول
+    // الحقول
     // ======================================
 
     const problemInput =
@@ -1304,6 +1549,44 @@ async function finishRequest() {
 
 
     // ======================================
+    // حماية الطلب
+    // ======================================
+
+    if (
+        !canAccessRequest(request)
+    ) {
+
+        alert(
+            "❌ هذا الطلب ليس مكلفاً لك"
+        );
+
+        closeModal();
+
+        return;
+
+    }
+
+
+    // ======================================
+    // يجب أن يكون مستلم
+    // ======================================
+
+    if (
+        request.status !== "received"
+    ) {
+
+        alert(
+            "لا يمكن إنهاء هذا الطلب حالياً"
+        );
+
+        closeModal();
+
+        return;
+
+    }
+
+
+    // ======================================
     // عناصر النموذج
     // ======================================
 
@@ -1353,9 +1636,11 @@ async function finishRequest() {
             "❌ حقول التنفيذ ناقصة"
         );
 
+
         alert(
             "خطأ: حقول تفاصيل التنفيذ غير موجودة في requests.html"
         );
+
 
         return;
 
@@ -1487,9 +1772,7 @@ async function finishRequest() {
             currentUser.email || "",
 
         name:
-            localStorage.getItem(
-                "employeeName"
-            ) || "غير معروف"
+            getCurrentEmployeeName()
 
     };
 
@@ -1590,7 +1873,7 @@ async function finishRequest() {
 
 
     // ======================================
-    // بيانات الصيانة
+    // بيانات السجل
     // ======================================
 
     const maintenanceData = {
@@ -1598,23 +1881,30 @@ async function finishRequest() {
         id:
             maintenanceId,
 
+
         requestId:
             selectedRequestId,
+
 
         type:
             request.type || "",
 
+
         name:
             request.name || "",
+
 
         national:
             request.national || "",
 
+
         location:
             request.location || "",
 
+
         phone:
             request.phone || "",
+
 
         problem:
 
@@ -1700,14 +1990,29 @@ async function finishRequest() {
 
 
         // ==================================
-        // المكلف
+        // المكلف الأصلي
+        // ==================================
+
+        assignedTo:
+
+            request.assignedTo || null,
+
+
+        assignedAt:
+            request.assignedAt || null,
+
+
+        // ==================================
+        // الموظف المنفذ
         // ==================================
 
         completedBy:
             employee.name,
 
+
         completedByUid:
             employee.uid,
+
 
         completedByEmail:
             employee.email,
@@ -1745,14 +2050,17 @@ async function finishRequest() {
             "================================"
         );
 
+
         console.log(
             "🟢 بدء إنهاء الطلب"
         );
+
 
         console.log(
             "Request ID:",
             selectedRequestId
         );
+
 
         console.log(
             "Maintenance ID:",
@@ -1760,14 +2068,12 @@ async function finishRequest() {
         );
 
 
-        // ==================================
-        // تحديث الاثنين بعملية واحدة
-        // ==================================
-
         const updates = {};
 
 
-        // الصيانة
+        // ==================================
+        // حفظ في سجل الصيانة
+        // ==================================
 
         updates[
             `maintenance/${maintenanceId}`
@@ -1775,7 +2081,9 @@ async function finishRequest() {
             maintenanceData;
 
 
-        // الطلب
+        // ==================================
+        // تحديث الطلب
+        // ==================================
 
         updates[
             `requests/${selectedRequestId}`
@@ -1783,17 +2091,22 @@ async function finishRequest() {
 
             ...request,
 
+
             status:
                 "ready",
+
 
             readyAt:
                 now,
 
+
             readyBy:
                 employee,
 
+
             execution:
                 execution,
+
 
             maintenanceId:
                 maintenanceId
@@ -1808,7 +2121,7 @@ async function finishRequest() {
 
 
         // ==================================
-        // الحفظ
+        // الحفظ بعملية واحدة
         // ==================================
 
         await update(
@@ -1818,13 +2131,13 @@ async function finishRequest() {
 
 
         console.log(
-            "✅ تم حفظ الطلب والصيانة بنجاح"
+            "✅ تم حفظ الطلب والسجل بنجاح"
         );
 
 
         alert(
             "✅ تم إنهاء الطلب بنجاح\n\n" +
-            "تم حفظه ضمن الصيانات"
+            "تم حفظه ضمن السجل"
         );
 
 
@@ -1839,24 +2152,29 @@ async function finishRequest() {
             "================================"
         );
 
+
         console.error(
             "❌ ERROR FINISH REQUEST"
         );
+
 
         console.error(
             "Code:",
             error.code
         );
 
+
         console.error(
             "Message:",
             error.message
         );
 
+
         console.error(
             "Full Error:",
             error
         );
+
 
         console.error(
             "================================"
@@ -1868,10 +2186,8 @@ async function finishRequest() {
 
 
         if (
-
             error.code ===
             "PERMISSION_DENIED"
-
         ) {
 
             message =
@@ -1903,7 +2219,9 @@ async function finishRequest() {
         }
 
 
-        alert(message);
+        alert(
+            message
+        );
 
     }
 
@@ -1921,6 +2239,23 @@ function showCompletedDetails(id) {
 
 
     if (!request) return;
+
+
+    // ======================================
+    // حماية
+    // ======================================
+
+    if (
+        !canAccessRequest(request)
+    ) {
+
+        alert(
+            "❌ لا يمكنك عرض هذا الطلب"
+        );
+
+        return;
+
+    }
 
 
     const execution =
@@ -1954,9 +2289,7 @@ function showCompletedDetails(id) {
 
 
     if (
-
         execution.sector
-
     ) {
 
         message +=
@@ -1967,9 +2300,7 @@ function showCompletedDetails(id) {
 
 
     if (
-
         execution.problem
-
     ) {
 
         message +=
@@ -1982,12 +2313,22 @@ function showCompletedDetails(id) {
     message +=
 
         `\nالمكلف: ${
+            request.assignedTo?.name ||
+            "غير معروف"
+        }`;
+
+
+    message +=
+
+        `\nالمنفذ: ${
             execution.completedBy?.name ||
             "غير معروف"
         }`;
 
 
-    alert(message);
+    alert(
+        message
+    );
 
 }
 
