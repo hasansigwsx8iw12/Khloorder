@@ -839,6 +839,31 @@
         }
 
     </style>
+    <script>
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const role =
+        localStorage.getItem("role");
+
+    if(role !== "admin"){
+
+        const addLink =
+            document.querySelector(
+                'a[href="add.html"]'
+            );
+
+        if(addLink){
+
+            addLink.closest("li")?.remove();
+
+        }
+
+    }
+
+});
+
+</script>
 
 </head>
 
