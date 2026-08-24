@@ -1,13 +1,105 @@
+import { db, auth } from "./firebase.js";
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
+import {
+    ref,
+    push,
+    set
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 <head>
 
+import {
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>KHLLO NET | الطلبات</title>
 
+let currentUser = null;
+
+
+// جلب المستخدم الحالي
+onAuthStateChanged(auth, (user)=>{
+
+    if(user){
+
+        currentUser = user;
+
+    }
+
+});
+
+
+
+
+// عرض النماذج
+window.showForm = function(type){
+
+let box = document.getElementById("formArea");
+
+
+
+if(type === "maintenance"){
+
+
+box.innerHTML = `
+
+<h2>طلب صيانة</h2>
+
+
+<label>الاسم الثلاثي للزبون</label>
+<input id="name">
+
+
+<label>الرقم الوطني</label>
+<input id="national">
+
+
+<label>مشكلة الزبون</label>
+<textarea id="problem"></textarea>
+
+
+
+<label>
+<input type="checkbox" id="dishCheck">
+عيار الصحن
+</label>
+
+
+<div id="dishBox"></div>
+
+
+
+<label>النقل</label>
+<input id="transfer">
+
+
+<label>البرج</label>
+<input id="tower">
+
+<label>الرقم</label>
+<input id="phon" type="number">
+
+<label>المبلغ المقبوض</label>
+<input id="price" type="number">
+
+
+
+<button id="saveMaintenanceBtn">
+حفظ الصيانة
+</button>
+
+`;
+
+
+
+document.getElementById("dishCheck").onchange = dishOption;
+
+
+document.getElementById("saveMaintenanceBtn").onclick =
+saveMaintenance;
 <link rel="stylesheet"
 href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
@@ -33,6 +125,14 @@ rel="stylesheet">
     --orange:#ffb84d;
 }
 
+
+else if(type === "install" || type === "transfer"){
+
+
+
+let title =
+type === "install" ? "تركيبة" : "قلبة";
+
 body{
     min-height:100vh;
     font-family:'Cairo',Arial,sans-serif;
@@ -44,8 +144,10 @@ body{
 }
 
 
+box.innerHTML = `
 /* ================= SIDEBAR ================= */
 
+<h2>${title}</h2>
 .sidebar{
     width:260px;
     height:100vh;
@@ -69,6 +171,8 @@ body{
     border-bottom:1px solid #ffffff18;
 }
 
+<label>اسم الزبون الثلاثي</label>
+<input id="name">
 .sidebar ul{
     list-style:none;
     padding:15px 10px;
@@ -78,6 +182,8 @@ body{
     margin:8px 0;
 }
 
+<label>الرقم الوطني</label>
+<input id="national">
 .sidebar a{
     color:#fff;
     text-decoration:none;
@@ -95,6 +201,8 @@ body{
     background:#28ed9125;
 }
 
+<label>السرعة</label>
+<input id="speed">
 .sidebar li.active a{
     background:var(--green);
     color:#04100b;
@@ -107,9 +215,13 @@ body{
     font-size:18px;
 }
 
+<label>الإشارة</label>
+<input id="signal">
 
 /* ================= PAGE ================= */
 
+<label>المبلغ المقبوض</label>
+<input id="price" type="number">
 .page{
     width:calc(100% - 260px);
     margin-right:260px;
@@ -123,6 +235,8 @@ body{
     margin-bottom:25px;
 }
 
+<label>البرج</label>
+<input id="tower">
 .logo{
     width:55px;
     height:55px;
@@ -143,14 +257,21 @@ body{
     font-size:22px;
 }
 
+<label>السكتور</label>
+<input id="sector">
 .brand p{
     font-size:12px;
     color:var(--muted);
 }
 
+<label>الرقم</label>
+<input id="phon" type="number">
 
 /* ================= STATS ================= */
 
+<button id="saveInstallBtn">
+حفظ ${title}
+</button>
 .stats{
     display:grid;
     grid-template-columns:repeat(4,1fr);
@@ -158,6 +279,7 @@ body{
     margin-bottom:20px;
 }
 
+`;
 .stat{
     background:#0b2118ee;
     border:1px solid #28ed9125;
@@ -177,6 +299,8 @@ body{
     font-size:13px;
 }
 
+document.getElementById("saveInstallBtn").onclick =
+()=>saveInstallation(title);
 .stat strong{
     font-size:28px;
     color:var(--green);
@@ -191,6 +315,10 @@ body{
     border-radius:23px;
     padding:25px;
 }
+
+  
+
+};
 
 .title{
     margin-bottom:22px;
@@ -209,12 +337,14 @@ body{
 
 /* ================= BOXES ================= */
 
+// خيار الصحن
 .requests-grid{
     display:grid;
     grid-template-columns:repeat(auto-fill,minmax(330px,1fr));
     gap:18px;
 }
 
+function dishOption(){
 .request-box{
     background:#071910;
     border:1px solid #28ed9125;
@@ -229,6 +359,8 @@ body{
     box-shadow:0 15px 40px #0006;
 }
 
+let box =
+document.getElementById("dishBox");
 .request-head{
     display:flex;
     align-items:center;
@@ -252,6 +384,7 @@ body{
     color:var(--orange);
 }
 
+if(document.getElementById("dishCheck").checked){
 .status.received{
     background:#28ed9118;
     color:var(--green);
@@ -262,12 +395,14 @@ body{
     color:#67a4ff;
 }
 
+box.innerHTML = `
 .info{
     display:grid;
     gap:9px;
     margin-bottom:18px;
 }
 
+<label>إشارة الصحن</label>
 .info div{
     display:flex;
     justify-content:space-between;
@@ -277,10 +412,12 @@ body{
     padding-bottom:7px;
 }
 
+<input id="dishSignal">
 .info span{
     color:var(--muted);
 }
 
+`;
 .info strong{
     color:#fff;
     text-align:left;
@@ -293,6 +430,7 @@ body{
     margin-bottom:15px;
 }
 
+}else{
 .problem span{
     display:block;
     color:var(--muted);
@@ -304,6 +442,7 @@ body{
     font-size:13px;
 }
 
+box.innerHTML = "";
 
 /* ================= BUTTON ================= */
 
@@ -319,6 +458,7 @@ button{
     cursor:pointer;
     transition:.3s;
 }
+
 
 button:hover{
     transform:translateY(-2px);
@@ -353,7 +493,9 @@ button + button{
     color:#28ed9140;
 }
 
+// حفظ الصيانة
 
+async function saveMaintenance(){
 /* ================= MODAL ================= */
 
 .modal{
@@ -367,6 +509,7 @@ button + button{
     z-index:2000;
 }
 
+try{
 .modal.hidden{
     display:none;
 }
@@ -382,6 +525,8 @@ button + button{
     box-shadow:0 25px 80px #000;
 }
 
+let id =
+push(ref(db,"maintenance")).key;
 .modal-box h2{
     margin-bottom:5px;
 }
@@ -396,6 +541,7 @@ button + button{
     margin-bottom:13px;
 }
 
+await set(
 .field label{
     display:block;
     color:var(--muted);
@@ -403,6 +549,7 @@ button + button{
     margin-bottom:6px;
 }
 
+ref(db,"maintenance/"+id),
 .field input,
 .field textarea,
 .field select{
@@ -416,6 +563,7 @@ button + button{
     font-family:inherit;
 }
 
+{
 .field textarea{
     min-height:90px;
     resize:vertical;
@@ -427,6 +575,7 @@ button + button{
     border-color:var(--green);
 }
 
+type:"صيانة",
 .modal-actions{
     display:flex;
     gap:10px;
@@ -438,6 +587,8 @@ button + button{
 }
 
 
+name:
+document.getElementById("name").value,
 /* ================= MOBILE ================= */
 
 @media(max-width:900px){
@@ -446,6 +597,8 @@ button + button{
         grid-template-columns:repeat(2,1fr);
     }
 
+national:
+document.getElementById("national").value,
 }
 
 @media(max-width:700px){
@@ -454,6 +607,8 @@ button + button{
         width:75px;
     }
 
+problem:
+document.getElementById("problem").value,
     .sidebar .side-logo{
         font-size:0;
         height:75px;
@@ -469,6 +624,8 @@ button + button{
         padding:14px 8px;
     }
 
+dishSignal:
+document.getElementById("dishSignal")?.value || "",
     .sidebar a span{
         display:none;
     }
@@ -483,6 +640,8 @@ button + button{
         padding:15px;
     }
 
+transfer:
+document.getElementById("transfer").value,
     .requests{
         padding:17px;
     }
@@ -493,12 +652,19 @@ button + button{
 
 }
 
+tower:
+document.getElementById("tower").value,
 @media(max-width:500px){
 
+phon:
+Number(document.getElementById("phon").value),
+    
     .stats{
         grid-template-columns:1fr 1fr;
     }
 
+price:
+Number(document.getElementById("price").value),
     .stat{
         padding:15px;
     }
@@ -507,11 +673,15 @@ button + button{
 
 </style>
 
+employee:
+localStorage.getItem("employeeName") || "غير معروف",
 </head>
 
 <body>
 
 
+uid:
+currentUser?.uid || "",
 <!-- ================= SIDEBAR ================= -->
 
 <div class="sidebar">
@@ -520,6 +690,8 @@ button + button{
         KHLLO NET
     </div>
 
+email:
+currentUser?.email || "",
     <ul>
 
         <li>
@@ -536,6 +708,8 @@ button + button{
             </a>
         </li>
 
+date:
+new Date().toLocaleDateString("ar"),
         <li>
             <a href="repairs.html">
                 <i class="fa-solid fa-screwdriver-wrench"></i>
@@ -557,6 +731,8 @@ button + button{
             </a>
         </li>
 
+createdAt:
+Date.now()
         <li>
             <a href="accounts.html">
                 <i class="fa-solid fa-wallet"></i>
@@ -571,6 +747,7 @@ button + button{
             </a>
         </li>
 
+}
         <li>
             <a onclick="logout()">
                 <i class="fa-solid fa-right-from-bracket"></i>
@@ -580,11 +757,13 @@ button + button{
 
     </ul>
 
+);
 </div>
 
 
 <!-- ================= CONTENT ================= -->
 
+alert("تم حفظ الصيانة بنجاح");
 <main class="page">
 
     <header class="brand">
@@ -593,6 +772,7 @@ button + button{
             K
         </div>
 
+}catch(error){
         <div>
             <h2>KHLLO NET</h2>
             <p>إدارة طلبات الصيانة والتركيب والقلبة</p>
@@ -600,11 +780,14 @@ button + button{
 
     </header>
 
+console.log(error);
 
+alert(error.message);
     <!-- الإحصائيات -->
 
     <section class="stats">
 
+}
         <div class="stat">
             <i class="fa-solid fa-inbox"></i>
             <span>كل الطلبات</span>
@@ -617,6 +800,7 @@ button + button{
             <strong id="newRequests">0</strong>
         </div>
 
+}
         <div class="stat">
             <i class="fa-solid fa-hand"></i>
             <span>تم الاستلام</span>
@@ -629,15 +813,20 @@ button + button{
             <strong id="readyRequests">0</strong>
         </div>
 
+// حفظ التركيبة والقلبة
     </section>
 
+async function saveInstallation(type){
 
     <!-- الطلبات -->
 
+try{
     <section class="requests">
 
         <div class="title">
 
+let id =
+push(ref(db,"maintenance")).key;
             <h1>
                 الطلبات
             </h1>
@@ -648,13 +837,17 @@ button + button{
 
         </div>
 
+await set(
 
+ref(db,"maintenance/"+id),
         <div id="requestsGrid" class="requests-grid">
 
+{
             <div class="empty">
 
                 <i class="fa-solid fa-spinner fa-spin"></i>
 
+type:type,
                 <p>
                     جاري تحميل الطلبات...
                 </p>
@@ -663,17 +856,23 @@ button + button{
 
         </div>
 
+name:
+document.getElementById("name").value,
     </section>
 
 </main>
 
 
+national:
+document.getElementById("national").value,
 <!-- ================= MODAL ================= -->
 
 <div id="detailsModal" class="modal hidden">
 
     <div class="modal-box">
 
+speed:
+document.getElementById("speed").value,
         <h2 id="modalTitle">
             تفاصيل التنفيذ
         </h2>
@@ -683,6 +882,8 @@ button + button{
         </p>
 
 
+signal:
+document.getElementById("signal").value,
         <!-- مشكلة الصيانة -->
 
         <div class="field" id="problemField">
@@ -691,6 +892,8 @@ button + button{
                 مشكلة الزبون
             </label>
 
+price:
+Number(document.getElementById("price").value),
             <textarea
                 id="problemInput"
                 placeholder="اكتب مشكلة الزبون..."
@@ -699,6 +902,8 @@ button + button{
         </div>
 
 
+tower:
+document.getElementById("tower").value,
         <!-- المبلغ -->
 
         <div class="field">
@@ -707,6 +912,8 @@ button + button{
                 المبلغ الذي تم أخذه من الزبون
             </label>
 
+sector:
+document.getElementById("sector").value,
             <input
                 id="priceInput"
                 type="number"
@@ -714,13 +921,20 @@ button + button{
                 placeholder="مثلاً 50000"
             >
 
+phon:
+Number(document.getElementById("phon").value),
+    
         </div>
 
+employee:
+localStorage.getItem("employeeName") || "غير معروف",
 
         <!-- الإشارة -->
 
         <div class="field">
 
+uid:
+currentUser?.uid || "",
             <label>
                 الإشارة
             </label>
@@ -732,11 +946,15 @@ button + button{
 
         </div>
 
+email:
+currentUser?.email || "",
 
         <!-- برج الربط -->
 
         <div class="field">
 
+date:
+new Date().toLocaleDateString("ar"),
             <label>
                 برج الربط
             </label>
@@ -748,15 +966,19 @@ button + button{
 
         </div>
 
+createdAt:
+Date.now()
 
         <!-- القطاع -->
 
+}
         <div class="field" id="sectorField">
 
             <label>
                 القطاع
             </label>
 
+);
             <input
                 id="sectorInput"
                 placeholder="اسم القطاع"
@@ -765,6 +987,7 @@ button + button{
         </div>
 
 
+alert("تم حفظ "+type+" بنجاح");
         <div class="modal-actions">
 
             <button
@@ -780,17 +1003,22 @@ button + button{
                 حفظ وإنهاء الطلب
             </button>
 
+}catch(error){
         </div>
 
     </div>
 
+console.log(error);
 </div>
 
+alert(error.message);
 
 <script type="module" src="requests.js"></script>
 
+}
 <script type="module" src="protect.js"></script>
 
 </body>
 
+}
 </html>
