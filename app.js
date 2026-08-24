@@ -1,4 +1,13 @@
-import { db, auth } from "./firebase.js";
+// ==========================================
+// KHLLO NET
+// app.js
+// لوحة التحكم
+// ==========================================
+
+import {
+    db,
+    auth
+} from "./firebase.js";
 
 
 import {
@@ -14,20 +23,102 @@ import {
 
 
 // ==========================================
-// تحميل معلومات الموظف
+// العناصر
 // ==========================================
 
-onAuthStateChanged(auth, async (user) => {
+const userName =
+    document.getElementById("userName");
 
-    if (!user) return;
+const userPhoto =
+    document.getElementById("userPhoto");
+
+const userRole =
+    document.getElementById("userRole");
+
+
+const repairsCount =
+    document.getElementById("repairsCount");
+
+const installCount =
+    document.getElementById("installCount");
+
+const moveCount =
+    document.getElementById("moveCount");
+
+const moneyCount =
+    document.getElementById("moneyCount");
+
+const lastOperations =
+    document.getElementById("lastOperations");
+
+
+// ==========================================
+// صورة افتراضية
+// ==========================================
+
+const defaultPhoto =
+    "https://via.placeholder.com/45?text=U";
+
+
+// ==========================================
+// التحقق من تسجيل الدخول
+// ==========================================
+
+onAuthStateChanged(
+    auth,
+    async (user) => {
+
+        if (!user) {
+
+            window.location.href =
+                "login.html";
+
+            return;
+
+        }
+
+
+        console.log(
+            "المستخدم الحالي:",
+            user.uid
+        );
+
+
+        // تحميل بيانات الموظف
+
+        await loadEmployee(
+            user.uid
+        );
+
+
+        // تحميل لوحة التحكم
+
+        loadDashboard(
+            user.uid
+        );
+
+    }
+);
+
+
+// ==========================================
+// تحميل بيانات الموظف
+// ==========================================
+
+async function loadEmployee(uid) {
 
     try {
 
         const employeeRef =
-            ref(db, "employees/" + user.uid);
+            ref(
+                db,
+                "employees/" + uid
+            );
+
 
         const snapshot =
             await get(employeeRef);
+
 
         if (!snapshot.exists()) {
 
@@ -35,56 +126,101 @@ onAuthStateChanged(auth, async (user) => {
                 "لم يتم العثور على بيانات الموظف"
             );
 
+
+            setEmployeeUI(
+                "غير معروف",
+                "موظف",
+                defaultPhoto
+            );
+
+
             return;
 
         }
 
+
         const employee =
             snapshot.val();
 
+
+        console.log(
+            "بيانات الموظف:",
+            employee
+        );
+
+
+        // ==================================
         // الاسم
+        // ==================================
 
-        const nameElement =
-            document.getElementById("userName");
-
-        if (nameElement) {
-
-            nameElement.textContent =
-                employee.name || "موظف";
-
-        }
+        const name =
+            employee.name ||
+            "موظف";
 
 
+        // ==================================
         // الصلاحية
+        // ==================================
 
-        const roleElement =
-            document.getElementById("userRole");
-
-        if (roleElement) {
-
-            roleElement.textContent =
-                employee.role === "admin"
-                    ? "مدير"
-                    : "موظف";
-
-        }
+        const role =
+            employee.role === "admin"
+                ? "مدير"
+                : "موظف";
 
 
+        // ==================================
         // الصورة
+        // ==================================
+        //
+        // نعتمد photoURL
+        // وهو الاسم الموجود في profile.js
+        //
 
-        const imageElement =
-            document.getElementById("userImage");
+        const photo =
+            employee.photoURL ||
+            employee.image ||
+            defaultPhoto;
 
 
-        if (
-            imageElement &&
-            employee.image
-        ) {
+        // ==================================
+        // عرض البيانات
+        // ==================================
 
-            imageElement.src =
-                employee.image;
+        setEmployeeUI(
+            name,
+            role,
+            photo
+        );
 
-        }
+
+        // ==================================
+        // حفظ محلي
+        // ==================================
+
+        localStorage.setItem(
+            "employeeName",
+            name
+        );
+
+
+        localStorage.setItem(
+            "role",
+            employee.role ||
+            "employee"
+        );
+
+
+        localStorage.setItem(
+            "employeePhoto",
+            photo
+        );
+
+
+        localStorage.setItem(
+            "employeePhone",
+            employee.phone ||
+            ""
+        );
 
 
     } catch (error) {
@@ -94,334 +230,587 @@ onAuthStateChanged(auth, async (user) => {
             error
         );
 
+
+        // محاولة استخدام البيانات المحفوظة
+
+        const savedName =
+            localStorage.getItem(
+                "employeeName"
+            ) ||
+            "غير معروف";
+
+
+        const savedPhoto =
+            localStorage.getItem(
+                "employeePhoto"
+            ) ||
+            defaultPhoto;
+
+
+        const savedRole =
+            localStorage.getItem(
+                "role"
+            ) === "admin"
+                ? "مدير"
+                : "موظف";
+
+
+        setEmployeeUI(
+            savedName,
+            savedRole,
+            savedPhoto
+        );
+
     }
 
-});
+}
 
 
-// اسم المستخدم في الهيدر
+// ==========================================
+// عرض بيانات الموظف
+// ==========================================
 
-let userName = document.getElementById("userName");
+function setEmployeeUI(
+    name,
+    role,
+    photo
+) {
 
+    // الاسم
 
+    if (userName) {
 
-// العناصر
+        userName.textContent =
+            name;
 
-let repairsCount = document.getElementById("repairsCount");
-
-let installCount = document.getElementById("installCount");
-
-let moveCount = document.getElementById("moveCount");
-
-let moneyCount = document.getElementById("moneyCount");
-
-let lastOperations = document.getElementById("lastOperations");
-
-
-
+    }
 
 
+    // الصلاحية
+
+    if (userRole) {
+
+        userRole.textContent =
+            role;
+
+    }
 
 
-onAuthStateChanged(auth, async(user)=>{
+    // الصورة
+
+    if (userPhoto) {
+
+        userPhoto.src =
+            photo ||
+            defaultPhoto;
 
 
-if(!user){
+        // إذا الصورة لم تعمل
 
-window.location.href="login.html";
+        userPhoto.onerror =
+            function () {
 
-return;
+                this.src =
+                    defaultPhoto;
+
+            };
+
+    }
+
+
+    // في حال كان HTML القديم
+    // يستخدم userImage
+
+    const oldImage =
+        document.getElementById(
+            "userImage"
+        );
+
+
+    if (oldImage) {
+
+        oldImage.src =
+            photo ||
+            defaultPhoto;
+
+
+        oldImage.onerror =
+            function () {
+
+                this.src =
+                    defaultPhoto;
+
+            };
+
+    }
 
 }
 
 
+// ==========================================
+// لوحة التحكم
+// ==========================================
+
+function loadDashboard(uid) {
+
+    const dataRef =
+        ref(
+            db,
+            "maintenance"
+        );
 
 
-// جلب بيانات الموظف
+    onValue(
+        dataRef,
+        (snapshot) => {
 
-try{
+            let repairs = 0;
 
+            let installs = 0;
 
-const employeeRef = ref(
-    db,
-    "employees/" + user.uid
-);
+            let moves = 0;
 
+            let money = 0;
 
-
-const snapshot = await get(employeeRef);
-
-
-
-if(snapshot.exists()){
+            let operations = [];
 
 
-const data = snapshot.val();
+            // ==================================
+            // الصلاحية
+            // ==================================
+
+            const role =
+                localStorage.getItem(
+                    "role"
+                );
 
 
+            console.log(
+                "صلاحية المستخدم:",
+                role
+            );
 
-if(userName){
 
-userName.innerHTML =
-data.name || "مستخدم";
+            // ==================================
+            // قراءة البيانات
+            // ==================================
+
+            snapshot.forEach(
+                (item) => {
+
+                    const data =
+                        item.val();
+
+
+                    if (!data) {
+
+                        return;
+
+                    }
+
+
+                    // ==================================
+                    // الموظف يرى الأعمال المكلف بها
+                    // ==================================
+
+                    if (
+                        role !== "admin"
+                    ) {
+
+                        /*
+                         * النظام الجديد:
+                         *
+                         * الطلب يحتوي:
+                         *
+                         * assignedTo: {
+                         *    uid,
+                         *    name,
+                         *    email,
+                         *    phone,
+                         *    photoURL
+                         * }
+                         *
+                         */
+
+
+                        const assignedUID =
+                            data.assignedTo?.uid;
+
+
+                        /*
+                         * دعم النظام القديم
+                         *
+                         * إذا لم يوجد assignedTo
+                         * نستخدم uid القديم
+                         */
+
+                        if (
+                            assignedUID
+                        ) {
+
+                            if (
+                                assignedUID !== uid
+                            ) {
+
+                                return;
+
+                            }
+
+                        } else {
+
+                            if (
+                                data.uid !== uid
+                            ) {
+
+                                return;
+
+                            }
+
+                        }
+
+                    }
+
+
+                    // ==================================
+                    // إضافة العملية
+                    // ==================================
+
+                    operations.push({
+
+                        id:
+                            item.key,
+
+                        data:
+                            data
+
+                    });
+
+
+                    // ==================================
+                    // الصيانة
+                    // ==================================
+
+                    if (
+                        data.type ===
+                        "صيانة"
+                    ) {
+
+                        repairs++;
+
+                    }
+
+
+                    // ==================================
+                    // التركيبة
+                    // ==================================
+
+                    else if (
+                        data.type ===
+                        "تركيبة"
+                    ) {
+
+                        installs++;
+
+                    }
+
+
+                    // ==================================
+                    // القلبة
+                    // ==================================
+
+                    else if (
+                        data.type ===
+                        "قلبة"
+                    ) {
+
+                        moves++;
+
+                    }
+
+
+                    // ==================================
+                    // المبلغ
+                    // ==================================
+
+                    money +=
+                        Number(
+                            data.price ||
+                            0
+                        );
+
+                }
+            );
+
+
+            // ==================================
+            // العدادات
+            // ==================================
+
+            if (repairsCount) {
+
+                repairsCount.textContent =
+                    repairs;
+
+            }
+
+
+            if (installCount) {
+
+                installCount.textContent =
+                    installs;
+
+            }
+
+
+            if (moveCount) {
+
+                moveCount.textContent =
+                    moves;
+
+            }
+
+
+            if (moneyCount) {
+
+                moneyCount.textContent =
+                    money;
+
+            }
+
+
+            // ==================================
+            // آخر العمليات
+            // ==================================
+
+            showLastOperations(
+                operations
+            );
+
+        }
+    );
 
 }
 
 
+// ==========================================
+// عرض آخر العمليات
+// ==========================================
 
-// تحديث الصلاحية
+function showLastOperations(
+    operations
+) {
 
-localStorage.setItem(
-"role",
-data.role || "employee"
-);
+    if (!lastOperations) {
+
+        return;
+
+    }
 
 
+    lastOperations.innerHTML =
+        "";
 
-}else{
+
+    if (
+        operations.length === 0
+    ) {
+
+        lastOperations.innerHTML = `
+
+            <tr>
+
+                <td colspan="5">
+
+                    لا توجد بيانات
+
+                </td>
+
+            </tr>
+
+        `;
+
+        return;
+
+    }
 
 
-if(userName){
+    // ==================================
+    // ترتيب حسب التاريخ
+    // ==================================
 
-userName.innerHTML="غير معروف";
+    operations.sort(
+        (a, b) => {
+
+            const dateA =
+                Number(
+                    a.data.createdAt ||
+                    0
+                );
+
+
+            const dateB =
+                Number(
+                    b.data.createdAt ||
+                    0
+                );
+
+
+            return dateB - dateA;
+
+        }
+    );
+
+
+    // آخر 5 عمليات
+
+    const last =
+        operations.slice(
+            0,
+            5
+        );
+
+
+    // ==================================
+    // عرض
+    // ==================================
+
+    last.forEach(
+        (item) => {
+
+            const d =
+                item.data;
+
+
+            lastOperations.innerHTML += `
+
+                <tr>
+
+                    <td>
+                        ${escapeHtml(
+                            d.type ||
+                            ""
+                        )}
+                    </td>
+
+
+                    <td>
+                        ${escapeHtml(
+                            d.name ||
+                            ""
+                        )}
+                    </td>
+
+
+                    <td>
+                        ${escapeHtml(
+                            d.tower ||
+                            ""
+                        )}
+                    </td>
+
+
+                    <td>
+                        ${Number(
+                            d.price ||
+                            0
+                        )}
+                    </td>
+
+
+                    <td>
+                        ${escapeHtml(
+                            d.date ||
+                            formatDate(
+                                d.createdAt
+                            )
+                        )}
+                    </td>
+
+                </tr>
+
+            `;
+
+        }
+    );
 
 }
 
 
-}
+// ==========================================
+// التاريخ
+// ==========================================
+
+function formatDate(
+    timestamp
+) {
+
+    if (!timestamp) {
+
+        return "";
+
+    }
 
 
+    try {
 
-}catch(error){
+        return new Date(
+            timestamp
+        ).toLocaleDateString(
+            "ar"
+        );
 
+    } catch {
 
-console.log(error);
+        return "";
 
-
-}
-
-
-
-
-
-loadDashboard(user.uid);
-
-
-
-});
-
-
-
-
-
-
-
-
-
-function loadDashboard(uid){
-
-
-
-const dataRef = ref(db,"maintenance");
-
-
-
-onValue(dataRef,(snapshot)=>{
-
-
-
-let repairs = 0;
-
-let installs = 0;
-
-let moves = 0;
-
-
-let money = 0;
-
-
-let operations = [];
-
-
-
-let role = localStorage.getItem("role");
-
-
-
-
-
-
-snapshot.forEach((item)=>{
-
-
-let data = item.val();
-
-
-
-
-// الموظف يرى أعماله فقط
-
-if(role !== "admin"){
-
-
-if(data.uid !== uid){
-
-return;
+    }
 
 }
 
 
-}
+// ==========================================
+// حماية HTML
+// ==========================================
 
+function escapeHtml(
+    value
+) {
 
+    if (
+        value === null ||
+        value === undefined
+    ) {
 
+        return "";
 
+    }
 
-operations.push(data);
 
+    return String(value)
 
+        .replace(
+            /&/g,
+            "&amp;"
+        )
 
+        .replace(
+            /</g,
+            "&lt;"
+        )
 
+        .replace(
+            />/g,
+            "&gt;"
+        )
 
-if(data.type === "صيانة"){
+        .replace(
+            /"/g,
+            "&quot;"
+        )
 
-
-repairs++;
-
-
-}
-
-else if(data.type === "تركيبة"){
-
-
-installs++;
-
-
-}
-
-else if(data.type === "قلبة"){
-
-
-moves++;
-
-
-}
-
-
-
-
-
-money += Number(data.price || 0);
-
-
-
-
-});
-
-
-
-
-
-
-
-
-if(repairsCount)
-repairsCount.innerHTML = repairs;
-
-
-
-if(installCount)
-installCount.innerHTML = installs;
-
-
-
-if(moveCount)
-moveCount.innerHTML = moves;
-
-
-
-if(moneyCount)
-moneyCount.innerHTML = money;
-
-
-
-
-
-
-
-
-
-if(lastOperations){
-
-
-
-lastOperations.innerHTML = "";
-
-
-
-let last = operations.reverse().slice(0,5);
-
-
-
-
-
-if(last.length === 0){
-
-
-lastOperations.innerHTML = `
-
-<tr>
-
-<td colspan="5">
-
-لا توجد بيانات
-
-</td>
-
-</tr>
-
-`;
-
-return;
-
-}
-
-
-
-
-
-last.forEach((d)=>{
-
-
-lastOperations.innerHTML += `
-
-<tr>
-
-<td>${d.type || ""}</td>
-
-<td>${d.name || ""}</td>
-
-<td>${d.tower || ""}</td>
-
-<td>${d.price || 0}</td>
-
-<td>${d.date || ""}</td>
-
-</tr>
-
-`;
-
-
-});
-
-
-
-}
-
-
-
-});
-
-
+        .replace(
+            /'/g,
+            "&#039;"
+        );
 
 }
