@@ -1,16 +1,11 @@
-// ==========================================
-// KHLLO NET
-// requests.js
-// إدارة الطلبات - Realtime Database
-// ==========================================
-
 import { db, auth } from "./firebase.js";
 
 import {
     ref,
     onValue,
     update,
-    push
+    push,
+    set
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 import {
@@ -18,927 +13,207 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 
-// ==========================================
-// المتغيرات
-// ==========================================
+const grid = document.getElementById("requestsGrid");
 
-let currentUser = null;
-
-let allRequests = {};
-
-let currentFilter = "all";
-
-let selectedRequestId = null;
+const totalRequests = document.getElementById("totalRequests");
+const newRequests = document.getElementById("newRequests");
+const receivedRequests = document.getElementById("receivedRequests");
+const readyRequests = document.getElementById("readyRequests");
 
 
-// ==========================================
-// المستخدم الحالي
-// ==========================================
+const modal = document.getElementById("detailsModal");
+const modalTitle = document.getElementById("modalTitle");
+const modalSub = document.getElementById("modalSub");
+
+const problemField = document.getElementById("problemField");
+const sectorField = document.getElementById("sectorField");
+
+const problemInput = document.getElementById("problemInput");
+const priceInput = document.getElementById("priceInput");
+const signalInput = document.getElementById("signalInput");
+const towerInput = document.getElementById("towerInput");
+const sectorInput = document.getElementById("sectorInput");
+
+const cancelDetails = document.getElementById("cancelDetails");
+const saveDetails = document.getElementById("saveDetails");
+
+
+let currentRequest = null;
+let currentUid = null;
+
+
+// ============================================
+// تسجيل الدخول
+// ============================================
 
 onAuthStateChanged(auth, (user) => {
 
     if (!user) {
 
-        console.log("لا يوجد مستخدم مسجل");
+        window.location.href = "login.html";
 
         return;
 
     }
 
-    currentUser = user;
+    currentUid = user.uid;
 
     loadRequests();
 
 });
 
 
-// ==========================================
-// معلومات المستخدم
-// ==========================================
-
-function getCurrentEmployee() {
-
-    return {
-
-        uid:
-            currentUser?.uid || "",
-
-        email:
-            currentUser?.email || "",
-
-        name:
-            localStorage.getItem(
-                "employeeName"
-            ) || "غير معروف",
-
-        role:
-            localStorage.getItem(
-                "role"
-            ) || "employee"
-
-    };
-
-}
-
-
-// ==========================================
-// هل المستخدم Admin ؟
-// ==========================================
-
-function isAdmin() {
-
-    return (
-        localStorage.getItem("role") ===
-        "admin"
-    );
-
-}
-
-
-// ==========================================
-// هل الموظف مكلف بالطلب؟
-// ==========================================
-
-function isAssignedToRequest(request) {
-
-    if (!currentUser || !request) {
-
-        return false;
-
-    }
-
-    return (
-        request.assignedTo?.uid ===
-        currentUser.uid
-    );
-
-}
-
-
-// ==========================================
-// هل يستطيع التعامل مع الطلب؟
-// ==========================================
-
-function canHandleRequest(request) {
-
-    if (!request) {
-
-        return false;
-
-    }
-
-    // المدير يستطيع التعامل مع كل الطلبات
-
-    if (isAdmin()) {
-
-        return true;
-
-    }
-
-    // الموظف يستطيع فقط طلباته
-
-    return isAssignedToRequest(
-        request
-    );
-
-}
-
-
-// ==========================================
+// ============================================
 // تحميل الطلبات
-// ==========================================
+// ============================================
 
 function loadRequests() {
 
-    const requestsRef =
-        ref(
-            db,
-            "requests"
-        );
+    onValue(ref(db, "requests"), (snapshot) => {
+
+        grid.innerHTML = "";
+
+        let total = 0;
+        let newCount = 0;
+        let receivedCount = 0;
+        let readyCount = 0;
+
+        let requests = [];
+
+        snapshot.forEach((item) => {
+
+            const data = item.val();
+
+            requests.push({
+                id: item.key,
+                data: data
+            });
+
+        });
 
 
-    onValue(
+        // الأحدث أولاً
+        requests.reverse();
 
-        requestsRef,
 
-        (snapshot) => {
+        requests.forEach((item) => {
 
-            if (snapshot.exists()) {
+            const data = item.data;
 
-                allRequests =
-                    snapshot.val();
+            total++;
 
-            } else {
 
-                allRequests = {};
+            const status = data.status || "new";
 
+
+            if (status === "new") {
+                newCount++;
             }
 
-            renderRequests();
+            if (status === "received") {
+                receivedCount++;
+            }
 
-        },
+            if (status === "ready") {
+                readyCount++;
+            }
 
-        (error) => {
 
-            console.error(
-                "خطأ تحميل الطلبات:",
-                error
+            grid.innerHTML += createRequestBox(
+                item.id,
+                data
             );
 
-
-            const grid =
-                document.getElementById(
-                    "requestsGrid"
-                );
+        });
 
 
-            if (grid) {
+        totalRequests.innerText = total;
+        newRequests.innerText = newCount;
+        receivedRequests.innerText = receivedCount;
+        readyRequests.innerText = readyCount;
 
-                grid.innerHTML = `
 
-                    <div class="empty">
+        if (total === 0) {
 
-                        <i class="
-                            fa-solid
-                            fa-triangle-exclamation
-                        "></i>
+            grid.innerHTML = `
 
-                        <p>
-                            حدث خطأ في تحميل الطلبات
-                        </p>
+                <div class="empty">
 
-                    </div>
+                    <i class="fa-solid fa-inbox"></i>
 
-                `;
+                    <p>
+                        لا توجد طلبات حالياً
+                    </p>
 
-            }
+                </div>
+
+            `;
 
         }
 
-    );
+    });
 
 }
 
 
-// ==========================================
-// رسم الطلبات
-// ==========================================
-
-function renderRequests() {
-
-    const grid =
-        document.getElementById(
-            "requestsGrid"
-        );
-
-
-    if (!grid) return;
-
-
-    const requests =
-
-        Object.entries(
-            allRequests || {}
-        )
-
-        .map(
-            ([id, request]) => {
-
-                return {
-
-                    ...request,
-
-                    id
-
-                };
-
-            }
-        )
-
-        .filter(
-            request => {
-
-                // Admin يرى كل الطلبات
-
-                if (isAdmin()) {
-
-                    return true;
-
-                }
-
-
-                // الموظف يرى فقط الطلبات المكلف بها
-
-                return isAssignedToRequest(
-                    request
-                );
-
-            }
-        )
-
-        .sort(
-
-            (a, b) =>
-
-                (
-                    b.createdAt ||
-                    0
-                )
-
-                -
-
-                (
-                    a.createdAt ||
-                    0
-                )
-
-        );
-
-
-    updateStats(
-        requests
-    );
-
-
-    let filtered =
-        requests;
-
-
-    if (
-        currentFilter !==
-        "all"
-    ) {
-
-        filtered =
-
-            requests.filter(
-                request =>
-                    request.status ===
-                    currentFilter
-            );
-
-    }
-
-
-    if (!filtered.length) {
-
-        grid.innerHTML = `
-
-            <div class="empty">
-
-                <i class="
-                    fa-solid
-                    fa-inbox
-                "></i>
-
-                <p>
-                    لا توجد طلبات هنا
-                </p>
-
-            </div>
-
-        `;
-
-        return;
-
-    }
-
-
-    grid.innerHTML =
-
-        filtered
-
-            .map(
-                request =>
-                    createRequestBox(
-                        request
-                    )
-            )
-
-            .join("");
-
-
-    attachButtons();
-
-}
-
-
-// ==========================================
-// الإحصائيات
-// ==========================================
-
-function updateStats(requests) {
-
-    const total =
-        requests.length;
-
-
-    const newCount =
-
-        requests.filter(
-            r =>
-                r.status ===
-                "new"
-        ).length;
-
-
-    const receivedCount =
-
-        requests.filter(
-            r =>
-                r.status ===
-                "received"
-        ).length;
-
-
-    const readyCount =
-
-        requests.filter(
-            r =>
-                r.status ===
-                "ready"
-        ).length;
-
-
-    setText(
-        "totalRequests",
-        total
-    );
-
-
-    setText(
-        "newRequests",
-        newCount
-    );
-
-
-    setText(
-        "receivedRequests",
-        receivedCount
-    );
-
-
-    setText(
-        "readyRequests",
-        readyCount
-    );
-
-}
-
-
-// ==========================================
-// تغيير النص
-// ==========================================
-
-function setText(
-    id,
-    value
-) {
-
-    const element =
-        document.getElementById(
-            id
-        );
-
-
-    if (element) {
-
-        element.textContent =
-            value;
-
-    }
-
-}
-
-
-// ==========================================
-// نوع الطلب
-// ==========================================
-
-function getTypeInfo(type) {
-
-    if (
-        type ===
-        "maintenance"
-    ) {
-
-        return {
-
-            title:
-                "صيانة",
-
-            icon:
-                "fa-screwdriver-wrench"
-
-        };
-
-    }
-
-
-    if (
-        type ===
-        "install"
-    ) {
-
-        return {
-
-            title:
-                "تركيبة",
-
-            icon:
-                "fa-satellite-dish"
-
-        };
-
-    }
-
-
-    if (
-        type ===
-        "transfer"
-    ) {
-
-        return {
-
-            title:
-                "قلبة",
-
-            icon:
-                "fa-right-left"
-
-        };
-
-    }
-
-
-    return {
-
-        title:
-            "طلب",
-
-        icon:
-            "fa-file"
-
-    };
-
-}
-
-
-// ==========================================
-// حالة الطلب
-// ==========================================
-
-function getStatusInfo(
-    status
-) {
-
-    if (
-        status ===
-        "received"
-    ) {
-
-        return {
-
-            text:
-                "تم استلام الطلب",
-
-            className:
-                "received"
-
-        };
-
-    }
-
-
-    if (
-        status ===
-        "ready"
-    ) {
-
-        return {
-
-            text:
-                "جاهز الطلب",
-
-            className:
-                "ready"
-
-        };
-
-    }
-
-
-    return {
-
-        text:
-            "طلب جديد",
-
-        className:
-            ""
-
-    };
-
-}
-
-
-// ==========================================
+// ============================================
 // إنشاء Box
-// ==========================================
+// ============================================
 
-function createRequestBox(
-    request
-) {
+function createRequestBox(id, data) {
 
-    const type =
-        getTypeInfo(
-            request.type
-        );
+    const type = data.type || "صيانة";
 
+    let icon = "fa-screwdriver-wrench";
 
-    const status =
-        getStatusInfo(
-            request.status
-        );
+    if (type === "تركيبة") {
+        icon = "fa-satellite-dish";
+    }
 
-
-    const assignedName =
-
-        request.assignedTo?.name ||
-
-        "غير محدد";
+    if (type === "قلبة") {
+        icon = "fa-repeat";
+    }
 
 
-    let html = `
-
-        <div
-            class="request-box"
-            data-id="${escapeHtml(
-                request.id
-            )}"
-        >
-
-            <div class="request-head">
-
-                <div class="type">
-
-                    <i class="
-                        fa-solid
-                        ${type.icon}
-                    "></i>
-
-                    ${type.title}
-
-                </div>
+    let statusText = "طلب جديد";
+    let statusClass = "";
 
 
-                <div
-                    class="
-                        status
-                        ${status.className}
-                    "
-                >
+    if (data.status === "received") {
 
-                    ${status.text}
+        statusText = "تم استلام الطلب";
+        statusClass = "received";
 
-                </div>
+    }
 
-            </div>
+    else if (data.status === "ready") {
 
+        statusText = "جاهز";
+        statusClass = "ready";
 
-            <div class="info">
+    }
 
-                <div>
+    else if (data.status === "completed") {
 
-                    <span>
-                        الزبون
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            request.name
-                        )}
-                    </strong>
-
-                </div>
-
-
-                <div>
-
-                    <span>
-                        الرقم الوطني
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            request.national
-                        )}
-                    </strong>
-
-                </div>
-
-
-                <div>
-
-                    <span>
-                        الموقع
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            request.location
-                        )}
-                    </strong>
-
-                </div>
-
-
-                <div>
-
-                    <span>
-                        الهاتف
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            request.phone
-                        )}
-                    </strong>
-
-                </div>
-
-    `;
-
-
-    // ======================================
-    // نوع التركيبة
-    // ======================================
-
-    if (
-
-        request.type ===
-        "install" &&
-
-        request.installType
-
-    ) {
-
-        html += `
-
-                <div>
-
-                    <span>
-                        نوع التركيبة
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            request.installType
-                        )}
-                    </strong>
-
-                </div>
-
-        `;
+        statusText = "مكتمل";
+        statusClass = "ready";
 
     }
 
 
-    // ======================================
-    // المبلغ
-    // ======================================
+    let button = "";
 
-    if (
 
-        request.price !==
-        undefined &&
+    // الطلب الجديد
+    if (data.status === "new" || !data.status) {
 
-        request.price !==
-        null
-
-    ) {
-
-        html += `
-
-                <div>
-
-                    <span>
-                        المبلغ
-                    </span>
-
-                    <strong>
-                        ${formatNumber(
-                            request.price
-                        )}
-                    </strong>
-
-                </div>
-
-        `;
-
-    }
-
-
-    // ======================================
-    // مقدم الطلب
-    // ======================================
-
-    html += `
-
-                <div>
-
-                    <span>
-                        مقدم الطلب
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-
-                            request.employee ||
-
-                            request.createdBy?.name ||
-
-                            "غير معروف"
-
-                        )}
-                    </strong>
-
-                </div>
-
-
-                <div>
-
-                    <span>
-                        المكلف
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            assignedName
-                        )}
-                    </strong>
-
-                </div>
-
-    `;
-
-
-    // ======================================
-    // المستلم
-    // ======================================
-
-    if (
-        request.receivedBy?.name
-    ) {
-
-        html += `
-
-                <div>
-
-                    <span>
-                        تم الاستلام بواسطة
-                    </span>
-
-                    <strong>
-                        ${escapeHtml(
-                            request.receivedBy.name
-                        )}
-                    </strong>
-
-                </div>
-
-        `;
-
-    }
-
-
-    html += `
-
-            </div>
-
-    `;
-
-
-    // ======================================
-    // مشكلة الصيانة
-    // ======================================
-
-    if (
-
-        request.type ===
-        "maintenance" &&
-
-        request.problem
-
-    ) {
-
-        html += `
-
-            <div class="problem">
-
-                <span>
-                    مشكلة الزبون
-                </span>
-
-                <p>
-                    ${escapeHtml(
-                        request.problem
-                    )}
-                </p>
-
-            </div>
-
-        `;
-
-    }
-
-
-    // ======================================
-    // الأزرار
-    // ======================================
-
-    html += `
-
-            <div class="request-actions">
-
-    `;
-
-
-    // ======================================
-    // طلب جديد
-    // ======================================
-
-    if (
-
-        request.status ===
-        "new" &&
-
-        canHandleRequest(
-            request
-        )
-
-    ) {
-
-        html += `
+        button = `
 
             <button
-
-                class="receive-btn"
-
-                data-action="receive"
-
-                data-id="${escapeHtml(
-                    request.id
-                )}"
-
+                onclick="receiveRequest('${id}')"
             >
-
-                <i class="
-                    fa-solid
-                    fa-hand
-                "></i>
-
+                <i class="fa-solid fa-hand"></i>
                 تم استلام الطلب
-
             </button>
 
         `;
@@ -946,42 +221,17 @@ function createRequestBox(
     }
 
 
-    // ======================================
     // تم الاستلام
-    // ======================================
+    else if (data.status === "received") {
 
-    if (
-
-        request.status ===
-        "received" &&
-
-        canHandleRequest(
-            request
-        )
-
-    ) {
-
-        html += `
+        button = `
 
             <button
-
-                class="ready-btn"
-
-                data-action="ready"
-
-                data-id="${escapeHtml(
-                    request.id
-                )}"
-
+                class="orange"
+                onclick="readyRequest('${id}')"
             >
-
-                <i class="
-                    fa-solid
-                    fa-check
-                "></i>
-
+                <i class="fa-solid fa-check"></i>
                 جاهز الطلب
-
             </button>
 
         `;
@@ -989,38 +239,19 @@ function createRequestBox(
     }
 
 
-    // ======================================
     // جاهز
-    // ======================================
+    else if (data.status === "ready") {
 
-    if (
-
-        request.status ===
-        "ready"
-
-    ) {
-
-        html += `
+        button = `
 
             <button
-
-                class="details-btn"
-
-                data-action="details"
-
-                data-id="${escapeHtml(
-                    request.id
-                )}"
-
+                onclick="openDetails(
+                    '${id}',
+                    '${escapeHtml(type)}'
+                )"
             >
-
-                <i class="
-                    fa-solid
-                    fa-eye
-                "></i>
-
-                عرض التفاصيل
-
+                <i class="fa-solid fa-clipboard-check"></i>
+                إدخال تفاصيل التنفيذ
             </button>
 
         `;
@@ -1028,679 +259,290 @@ function createRequestBox(
     }
 
 
-    html += `
+    // مكتمل
+    else {
 
+        button = `
+
+            <div style="
+                text-align:center;
+                color:#28ed91;
+                font-weight:bold;
+                padding:10px;
+            ">
+
+                <i class="fa-solid fa-circle-check"></i>
+                تم تنفيذ الطلب
+
+            </div>
+
+        `;
+
+    }
+
+
+    return `
+
+    <div class="request-box">
+
+        <div class="request-head">
+
+            <div class="type">
+
+                <i class="fa-solid ${icon}"></i>
+
+                ${type}
+
+            </div>
+
+            <div class="status ${statusClass}">
+                ${statusText}
             </div>
 
         </div>
 
+
+        <div class="info">
+
+            <div>
+                <span>اسم الزبون</span>
+                <strong>${escapeHtml(data.name || "-")}</strong>
+            </div>
+
+
+            ${
+                data.national
+                ?
+                `
+                <div>
+                    <span>الرقم الوطني</span>
+                    <strong>${escapeHtml(data.national)}</strong>
+                </div>
+                `
+                :
+                ""
+            }
+
+
+            <div>
+                <span>الموقع</span>
+                <strong>${escapeHtml(data.location || "-")}</strong>
+            </div>
+
+
+            <div>
+                <span>رقم الهاتف</span>
+                <strong>${escapeHtml(data.phone || "-")}</strong>
+            </div>
+
+
+            <div>
+                <span>مقدم الطلب</span>
+                <strong>${escapeHtml(data.requester || "-")}</strong>
+            </div>
+
+
+            <div>
+                <span>المكلف</span>
+                <strong>${escapeHtml(
+                    data.assignee ||
+                    data.employee ||
+                    "-"
+                )}</strong>
+            </div>
+
+
+            <div>
+                <span>التاريخ</span>
+                <strong>${escapeHtml(data.date || "-")}</strong>
+            </div>
+
+        </div>
+
+
+        ${
+            type === "صيانة"
+            ?
+            `
+            <div class="problem">
+
+                <span>مشكلة الزبون</span>
+
+                <p>
+                    ${escapeHtml(data.problem || "لم يتم تحديد المشكلة")}
+                </p>
+
+            </div>
+            `
+            :
+            ""
+        }
+
+
+        ${button}
+
+    </div>
+
     `;
 
-
-    return html;
-
 }
 
 
-// ==========================================
-// ربط الأزرار
-// ==========================================
+// ============================================
+// تم استلام الطلب
+// ============================================
 
-function attachButtons() {
-
-    document
-
-        .querySelectorAll(
-            "[data-action]"
-        )
-
-        .forEach(
-            button => {
-
-                button.addEventListener(
-
-                    "click",
-
-                    () => {
-
-                        const action =
-                            button.dataset.action;
-
-
-                        const id =
-                            button.dataset.id;
-
-
-                        if (
-                            action ===
-                            "receive"
-                        ) {
-
-                            receiveRequest(
-                                id
-                            );
-
-                        }
-
-
-                        if (
-                            action ===
-                            "ready"
-                        ) {
-
-                            openDetails(
-                                id
-                            );
-
-                        }
-
-
-                        if (
-                            action ===
-                            "details"
-                        ) {
-
-                            showCompletedDetails(
-                                id
-                            );
-
-                        }
-
-                    }
-
-                );
-
-            }
-        );
-
-}
-
-
-// ==========================================
-// استلام الطلب
-// ==========================================
-
-async function receiveRequest(
-    id
-) {
-
-    if (!currentUser) {
-
-        alert(
-            "يجب تسجيل الدخول أولاً"
-        );
-
-        return;
-
-    }
-
-
-    const request =
-        allRequests[id];
-
-
-    if (!request) {
-
-        alert(
-            "الطلب غير موجود"
-        );
-
-        return;
-
-    }
-
-
-    // فحص الصلاحية
-
-    if (
-        !canHandleRequest(
-            request
-        )
-    ) {
-
-        alert(
-            "❌ هذا الطلب غير مكلف لك"
-        );
-
-        return;
-
-    }
-
-
-    if (
-        request.status !==
-        "new"
-    ) {
-
-        alert(
-            "الطلب لم يعد جديدًا"
-        );
-
-        return;
-
-    }
-
-
-    const employee =
-        getCurrentEmployee();
-
+window.receiveRequest = async function(id) {
 
     try {
 
         await update(
-
-            ref(
-                db,
-                `requests/${id}`
-            ),
-
+            ref(db, `requests/${id}`),
             {
-
-                status:
-                    "received",
-
-                receivedAt:
-                    Date.now(),
-
-                receivedBy:
-                    employee
-
+                status: "received",
+                receivedAt: Date.now(),
+                receivedBy: currentUid
             }
-
-        );
-
-
-        console.log(
-            "✅ تم استلام الطلب:",
-            id
         );
 
     }
 
     catch (error) {
 
-        console.error(
-            "❌ خطأ استلام الطلب:",
-            error
-        );
+        console.error(error);
 
-        alert(
+        alert("حدث خطأ أثناء استلام الطلب");
 
-            "حدث خطأ أثناء استلام الطلب:\n" +
+    }
 
-            error.message
+};
 
+
+// ============================================
+// جاهز الطلب
+// ============================================
+
+window.readyRequest = async function(id) {
+
+    try {
+
+        await update(
+            ref(db, `requests/${id}`),
+            {
+                status: "ready",
+                readyAt: Date.now(),
+                readyBy: currentUid
+            }
         );
 
     }
 
-}
+    catch (error) {
 
+        console.error(error);
 
-// ==========================================
-// فتح نافذة التنفيذ
-// ==========================================
-
-function openDetails(
-    id
-) {
-
-    const request =
-        allRequests[id];
-
-
-    if (!request) return;
-
-
-    if (
-        !canHandleRequest(
-            request
-        )
-    ) {
-
-        alert(
-            "❌ هذا الطلب غير مكلف لك"
-        );
-
-        return;
+        alert("حدث خطأ");
 
     }
 
-
-    selectedRequestId =
-        id;
+};
 
 
-    const modal =
-        document.getElementById(
-            "detailsModal"
-        );
+// ============================================
+// فتح تفاصيل التنفيذ
+// ============================================
+
+window.openDetails = function(id, type) {
+
+    currentRequest = {
+        id: id,
+        type: type
+    };
 
 
-    const title =
-        document.getElementById(
-            "modalTitle"
-        );
+    modal.classList.remove("hidden");
 
 
-    const sub =
-        document.getElementById(
-            "modalSub"
-        );
+    modalTitle.innerText =
+        `تفاصيل تنفيذ ${type}`;
 
 
-    const problemField =
-        document.getElementById(
-            "problemField"
-        );
+    modalSub.innerText =
+        "أدخل المعلومات النهائية للطلب";
 
 
-    const sectorField =
-        document.getElementById(
-            "sectorField"
-        );
+    problemInput.value = "";
+    priceInput.value = "";
+    signalInput.value = "";
+    towerInput.value = "";
+    sectorInput.value = "";
 
 
-    if (
+    // الصيانة
+    if (type === "صيانة") {
 
-        !modal ||
-
-        !title ||
-
-        !sub ||
-
-        !problemField ||
-
-        !sectorField
-
-    ) {
-
-        console.error(
-            "❌ عناصر Modal ناقصة"
-        );
-
-        alert(
-            "يوجد خطأ في نافذة تفاصيل التنفيذ"
-        );
-
-        return;
+        problemField.style.display = "block";
+        sectorField.style.display = "none";
 
     }
 
+    // التركيبة
+    else if (type === "تركيبة") {
 
-    // ======================================
-    // حسب النوع
-    // ======================================
-
-    if (
-
-        request.type ===
-        "maintenance"
-
-    ) {
-
-        title.textContent =
-            "🛠 إنهاء طلب الصيانة";
-
-        problemField.style.display =
-            "block";
-
-        sectorField.style.display =
-            "none";
+        problemField.style.display = "none";
+        sectorField.style.display = "block";
 
     }
 
-    else if (
-
-        request.type ===
-        "install"
-
-    ) {
-
-        title.textContent =
-            "📡 إنهاء طلب التركيبة";
-
-        problemField.style.display =
-            "none";
-
-        sectorField.style.display =
-            "block";
-
-    }
-
+    // القلبة
     else {
 
-        title.textContent =
-            "🔄 إنهاء طلب القلبة";
-
-        problemField.style.display =
-            "none";
-
-        sectorField.style.display =
-            "block";
+        problemField.style.display = "none";
+        sectorField.style.display = "block";
 
     }
 
-
-    sub.textContent =
-        `الزبون: ${
-            request.name || ""
-        }`;
+};
 
 
-    const problemInput =
-        document.getElementById(
-            "problemInput"
-        );
+// ============================================
+// إغلاق
+// ============================================
+
+cancelDetails.onclick = function() {
+
+    modal.classList.add("hidden");
+
+    currentRequest = null;
+
+};
 
 
-    const priceInput =
-        document.getElementById(
-            "priceInput"
-        );
+// ============================================
+// حفظ التنفيذ
+// ============================================
 
+saveDetails.onclick = async function() {
 
-    const signalInput =
-        document.getElementById(
-            "signalInput"
-        );
-
-
-    const towerInput =
-        document.getElementById(
-            "towerInput"
-        );
-
-
-    const sectorInput =
-        document.getElementById(
-            "sectorInput"
-        );
-
-
-    if (problemInput) {
-
-        problemInput.value =
-            request.problem || "";
-
-    }
-
-
-    if (priceInput) {
-
-        priceInput.value =
-            request.price || "";
-
-    }
-
-
-    if (signalInput) {
-
-        signalInput.value = "";
-
-    }
-
-
-    if (towerInput) {
-
-        towerInput.value = "";
-
-    }
-
-
-    if (sectorInput) {
-
-        sectorInput.value = "";
-
-    }
-
-
-    modal.classList.remove(
-        "hidden"
-    );
-
-}
-
-
-// ==========================================
-// إغلاق النافذة
-// ==========================================
-
-document
-
-    .getElementById(
-        "cancelDetails"
-    )
-
-    ?.addEventListener(
-        "click",
-        closeModal
-    );
-
-
-function closeModal() {
-
-    selectedRequestId =
-        null;
-
-
-    document
-
-        .getElementById(
-            "detailsModal"
-        )
-
-        ?.classList.add(
-            "hidden"
-        );
-
-}
-
-
-// ==========================================
-// زر الحفظ
-// ==========================================
-
-document
-
-    .getElementById(
-        "saveDetails"
-    )
-
-    ?.addEventListener(
-        "click",
-        finishRequest
-    );
-
-
-// ==========================================
-// إنهاء الطلب
-// ==========================================
-
-async function finishRequest() {
-
-    if (!selectedRequestId) {
-
-        alert(
-            "لم يتم تحديد طلب"
-        );
-
+    if (!currentRequest) {
         return;
-
     }
 
 
-    if (!currentUser) {
+    const price = Number(priceInput.value || 0);
 
-        alert(
-            "يجب تسجيل الدخول أولاً"
-        );
+    const signal = signalInput.value.trim();
 
-        return;
+    const tower = towerInput.value.trim();
 
-    }
+    const sector = sectorInput.value.trim();
 
+    const problem = problemInput.value.trim();
 
-    const request =
-        allRequests[
-            selectedRequestId
-        ];
 
+    if (price < 0) {
 
-    if (!request) {
-
-        alert(
-            "الطلب غير موجود"
-        );
-
-        return;
-
-    }
-
-
-    // ======================================
-    // التحقق من الصلاحية
-    // ======================================
-
-    if (
-        !canHandleRequest(
-            request
-        )
-    ) {
-
-        alert(
-            "❌ هذا الطلب غير مكلف لك"
-        );
-
-        return;
-
-    }
-
-
-    if (
-        request.status !==
-        "received"
-    ) {
-
-        alert(
-            "الطلب ليس بحالة تسمح بإنهائه"
-        );
-
-        return;
-
-    }
-
-
-    // ======================================
-    // الحقول
-    // ======================================
-
-    const problemElement =
-        document.getElementById(
-            "problemInput"
-        );
-
-
-    const priceElement =
-        document.getElementById(
-            "priceInput"
-        );
-
-
-    const signalElement =
-        document.getElementById(
-            "signalInput"
-        );
-
-
-    const towerElement =
-        document.getElementById(
-            "towerInput"
-        );
-
-
-    const sectorElement =
-        document.getElementById(
-            "sectorInput"
-        );
-
-
-    if (
-
-        !priceElement ||
-
-        !signalElement ||
-
-        !towerElement ||
-
-        !sectorElement
-
-    ) {
-
-        alert(
-            "خطأ: حقول تفاصيل التنفيذ غير موجودة"
-        );
-
-        return;
-
-    }
-
-
-    const problem =
-
-        problemElement
-
-            ? problemElement.value.trim()
-
-            : "";
-
-
-    const price =
-
-        Number(
-            priceElement.value
-        ) || 0;
-
-
-    const signal =
-        signalElement.value.trim();
-
-
-    const tower =
-        towerElement.value.trim();
-
-
-    const sector =
-        sectorElement.value.trim();
-
-
-    // ======================================
-    // التحقق
-    // ======================================
-
-    if (
-
-        request.type ===
-        "maintenance" &&
-
-        !problem
-
-    ) {
-
-        alert(
-            "يرجى إدخال مشكلة الزبون"
-        );
-
-        return;
-
-    }
-
-
-    if (price <= 0) {
-
-        alert(
-            "يرجى إدخال المبلغ"
-        );
+        alert("المبلغ غير صحيح");
 
         return;
 
@@ -1709,9 +551,7 @@ async function finishRequest() {
 
     if (!signal) {
 
-        alert(
-            "يرجى إدخال الإشارة"
-        );
+        alert("أدخل الإشارة");
 
         return;
 
@@ -1720,9 +560,7 @@ async function finishRequest() {
 
     if (!tower) {
 
-        alert(
-            "يرجى إدخال برج الربط"
-        );
+        alert("أدخل برج الربط");
 
         return;
 
@@ -1730,623 +568,183 @@ async function finishRequest() {
 
 
     if (
-
-        (
-
-            request.type ===
-            "install" ||
-
-            request.type ===
-            "transfer"
-
-        ) &&
-
+        currentRequest.type !== "صيانة" &&
         !sector
-
     ) {
 
-        alert(
-            "يرجى إدخال السكتور"
-        );
+        alert("أدخل السكتور");
 
         return;
 
     }
 
-
-    // ======================================
-    // الموظف المنفذ
-    // ======================================
-
-    const employee =
-        getCurrentEmployee();
-
-
-    const now =
-        Date.now();
-
-
-    // ======================================
-    // إنشاء سجل maintenance
-    // ======================================
-
-    const maintenanceRef =
-        push(
-            ref(
-                db,
-                "maintenance"
-            )
-        );
-
-
-    const maintenanceId =
-        maintenanceRef.key;
-
-
-    if (!maintenanceId) {
-
-        alert(
-            "تعذر إنشاء رقم سجل الصيانة"
-        );
-
-        return;
-
-    }
-
-
-    // ======================================
-    // بيانات التنفيذ
-    // ======================================
-
-    const execution = {
-
-        problem:
-
-            request.type ===
-            "maintenance"
-
-                ? problem
-                : "",
-
-        price:
-            price,
-
-        signal:
-            signal,
-
-        tower:
-            tower,
-
-        sector:
-
-            (
-
-                request.type ===
-                "install" ||
-
-                request.type ===
-                "transfer"
-
-            )
-
-                ? sector
-                : "",
-
-        completedBy: {
-
-            uid:
-                employee.uid,
-
-            email:
-                employee.email,
-
-            name:
-                employee.name
-
-        },
-
-        completedAt:
-            now
-
-    };
-
-
-    // ======================================
-    // بيانات maintenance
-    // ======================================
-
-    const maintenanceData = {
-
-        id:
-            maintenanceId,
-
-        requestId:
-            selectedRequestId,
-
-        type:
-            request.type || "",
-
-        name:
-            request.name || "",
-
-        national:
-            request.national || "",
-
-        location:
-            request.location || "",
-
-        phone:
-            request.phone || "",
-
-        problem:
-
-            request.type ===
-            "maintenance"
-
-                ? problem
-                : "",
-
-        installType:
-            request.installType || "",
-
-        price:
-            price,
-
-        signal:
-            signal,
-
-        tower:
-            tower,
-
-        sector:
-
-            (
-
-                request.type ===
-                "install" ||
-
-                request.type ===
-                "transfer"
-
-            )
-
-                ? sector
-                : "",
-
-        transfer:
-            request.transfer || "",
-
-        dish:
-            request.dish === true,
-
-        dishSignal:
-            request.dishSignal || "",
-
-
-        // ==================================
-        // مقدم الطلب
-        // ==================================
-
-        employee:
-
-            request.employee ||
-
-            request.createdBy?.name ||
-
-            "غير معروف",
-
-        uid:
-
-            request.uid ||
-
-            request.createdBy?.uid ||
-
-            "",
-
-        email:
-
-            request.email ||
-
-            request.createdBy?.email ||
-
-            "",
-
-
-        // ==================================
-        // المكلف الأصلي
-        // ==================================
-
-        assignedTo:
-
-            request.assignedTo || null,
-
-
-        // ==================================
-        // الموظف المنفذ
-        // ==================================
-
-        completedBy:
-            employee.name,
-
-        completedByUid:
-            employee.uid,
-
-        completedByEmail:
-            employee.email,
-
-
-        // ==================================
-        // التاريخ
-        // ==================================
-
-        date:
-
-            new Date()
-                .toLocaleDateString(
-                    "ar"
-                ),
-
-        createdAt:
-
-            request.createdAt ||
-            now,
-
-        completedAt:
-            now
-
-    };
-
-
-    // ======================================
-    // تحديثات قاعدة البيانات
-    // ======================================
 
     try {
 
-        const updates = {};
+        const requestRef =
+            ref(
+                db,
+                `requests/${currentRequest.id}`
+            );
 
 
-        // سجل الصيانة
+        // جلب الطلب الحالي من الـ snapshot
+        const snapshot = await new Promise((resolve) => {
 
-        updates[
-            `maintenance/${maintenanceId}`
-        ] =
-            maintenanceData;
+            onValue(
+                requestRef,
+                resolve,
+                {
+                    onlyOnce: true
+                }
+            );
+
+        });
 
 
-        // تحديث الطلب
+        if (!snapshot.exists()) {
 
-        updates[
-            `requests/${selectedRequestId}`
-        ] = {
+            alert("الطلب غير موجود");
 
-            ...request,
+            return;
 
-            status:
-                "ready",
+        }
 
-            readyAt:
-                now,
 
-            readyBy:
-                employee,
+        const request = snapshot.val();
 
-            execution:
-                execution,
 
-            maintenanceId:
-                maintenanceId
+        // ========================================
+        // إنشاء سجل الصيانة النهائي
+        // ========================================
+
+        const maintenanceRef =
+            push(ref(db, "maintenance"));
+
+
+        const maintenanceData = {
+
+            type: currentRequest.type,
+
+            name: request.name || "",
+
+            national: request.national || "",
+
+            problem:
+                currentRequest.type === "صيانة"
+                ? problem
+                : "",
+
+            location: request.location || "",
+
+            phone: request.phone || "",
+
+            requester: request.requester || "",
+
+            employee:
+                request.assignee ||
+                request.employee ||
+                "",
+
+            uid: request.assigneeUid || "",
+
+            price: price,
+
+            signal: signal,
+
+            tower: tower,
+
+            sector:
+                currentRequest.type === "صيانة"
+                ? ""
+                : sector,
+
+            date:
+                new Date().toLocaleDateString("ar"),
+
+            createdAt: Date.now(),
+
+            requestId: currentRequest.id
 
         };
 
 
-        console.log(
-            "🟢 سيتم حفظ:",
-            updates
+        await set(
+            maintenanceRef,
+            maintenanceData
         );
 
 
-        // ==================================
-        // الحفظ بعملية واحدة
-        // ==================================
+        // ========================================
+        // تحديث حالة الطلب
+        // ========================================
 
         await update(
-            ref(db),
-            updates
+            requestRef,
+            {
+                status: "completed",
+
+                completedAt: Date.now(),
+
+                completedBy: currentUid,
+
+                maintenanceId: maintenanceRef.key,
+
+                price: price,
+
+                signal: signal,
+
+                tower: tower,
+
+                sector:
+                    currentRequest.type === "صيانة"
+                    ? ""
+                    : sector,
+
+                finalProblem:
+                    currentRequest.type === "صيانة"
+                    ? problem
+                    : ""
+
+            }
         );
 
 
-        console.log(
-            "✅ تم إنهاء الطلب بنجاح"
-        );
+        modal.classList.add("hidden");
+
+        currentRequest = null;
 
 
         alert(
-            "✅ تم إنهاء الطلب بنجاح\n\n" +
-            "تم حفظه ضمن الصيانات"
+            "✅ تم تسجيل تنفيذ الطلب بنجاح"
         );
-
-
-        closeModal();
 
     }
 
     catch (error) {
 
-        console.error(
-            "❌ ERROR FINISH REQUEST",
-            error
-        );
-
-
-        if (
-            error.code ===
-            "PERMISSION_DENIED"
-        ) {
-
-            alert(
-                "❌ Firebase رفض عملية الحفظ.\n\n" +
-                "تحقق من Rules الخاصة بـ Realtime Database."
-            );
-
-        }
-
-        else {
-
-            alert(
-
-                "حدث خطأ أثناء إنهاء الطلب:\n\n" +
-
-                (
-                    error.message ||
-                    "خطأ غير معروف"
-                )
-
-            );
-
-        }
-
-    }
-
-}
-
-
-// ==========================================
-// عرض التفاصيل
-// ==========================================
-
-function showCompletedDetails(
-    id
-) {
-
-    const request =
-        allRequests[id];
-
-
-    if (!request) return;
-
-
-    const execution =
-        request.execution;
-
-
-    if (!execution) {
+        console.error(error);
 
         alert(
-            "لا توجد تفاصيل تنفيذ لهذا الطلب"
+            "حدث خطأ أثناء حفظ الطلب"
         );
 
-        return;
-
     }
 
-
-    let message =
-
-        `الزبون: ${
-            request.name || ""
-        }\n` +
-
-        `النوع: ${
-            getTypeInfo(
-                request.type
-            ).title
-        }\n` +
-
-        `المبلغ: ${
-            execution.price || 0
-        }\n` +
-
-        `الإشارة: ${
-            execution.signal || ""
-        }\n` +
-
-        `برج الربط: ${
-            execution.tower || ""
-        }`;
+};
 
 
-    if (
-        execution.sector
-    ) {
+// ============================================
+// حماية النصوص
+// ============================================
 
-        message +=
-
-            `\nالسكتور: ${
-                execution.sector
-            }`;
-
-    }
-
-
-    if (
-        execution.problem
-    ) {
-
-        message +=
-
-            `\nالمشكلة: ${
-                execution.problem
-            }`;
-
-    }
-
-
-    message +=
-
-        `\nالمكلف: ${
-            request.assignedTo?.name ||
-            execution.completedBy?.name ||
-            "غير معروف"
-        }`;
-
-
-    message +=
-
-        `\nالمنفذ: ${
-            execution.completedBy?.name ||
-            "غير معروف"
-        }`;
-
-
-    alert(
-        message
-    );
-
-}
-
-
-// ==========================================
-// الفلاتر
-// ==========================================
-
-document
-
-    .querySelectorAll(
-        ".filter-btn"
-    )
-
-    .forEach(
-        button => {
-
-            button.addEventListener(
-
-                "click",
-
-                () => {
-
-                    document
-
-                        .querySelectorAll(
-                            ".filter-btn"
-                        )
-
-                        .forEach(
-                            btn => {
-
-                                btn.classList.remove(
-                                    "active"
-                                );
-
-                            }
-                        );
-
-
-                    button.classList.add(
-                        "active"
-                    );
-
-
-                    currentFilter =
-                        button.dataset.filter;
-
-
-                    renderRequests();
-
-                }
-
-            );
-
-        }
-    );
-
-
-// ==========================================
-// حماية HTML
-// ==========================================
-
-function escapeHtml(
-    value
-) {
-
-    if (
-
-        value ===
-        undefined ||
-
-        value ===
-        null
-
-    ) {
-
-        return "";
-
-    }
-
+function escapeHtml(value) {
 
     return String(value)
-
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-
-        .replace(
-            /</g,
-            "&lt;"
-        )
-
-        .replace(
-            />/g,
-            "&gt;"
-        )
-
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-
-}
-
-
-// ==========================================
-// تنسيق الأرقام
-// ==========================================
-
-function formatNumber(
-    value
-) {
-
-    const number =
-        Number(value);
-
-
-    if (
-        Number.isNaN(number)
-    ) {
-
-        return value;
-
-    }
-
-
-    return number.toLocaleString(
-        "ar-SY"
-    );
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 
 }
