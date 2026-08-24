@@ -10,7 +10,7 @@ import {
     ref,
     onValue,
     update,
-    set
+    push
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 import {
@@ -39,14 +39,11 @@ onAuthStateChanged(auth, (user) => {
 
     if (!user) {
 
-        console.log(
-            "لا يوجد مستخدم مسجل"
-        );
+        console.log("لا يوجد مستخدم مسجل");
 
         return;
 
     }
-
 
     currentUser = user;
 
@@ -66,7 +63,9 @@ function loadRequests() {
 
 
     onValue(
+
         requestsRef,
+
         (snapshot) => {
 
             if (snapshot.exists()) {
@@ -80,14 +79,16 @@ function loadRequests() {
 
             }
 
-
             renderRequests();
 
         },
 
         (error) => {
 
-            console.error(error);
+            console.error(
+                "خطأ تحميل الطلبات:",
+                error
+            );
 
             const grid =
                 document.getElementById(
@@ -100,10 +101,7 @@ function loadRequests() {
 
                     <div class="empty">
 
-                        <i
-                            class="fa-solid
-                            fa-triangle-exclamation"
-                        ></i>
+                        <i class="fa-solid fa-triangle-exclamation"></i>
 
                         <p>
                             حدث خطأ في تحميل الطلبات
@@ -116,6 +114,7 @@ function loadRequests() {
             }
 
         }
+
     );
 
 }
@@ -137,12 +136,30 @@ function renderRequests() {
 
 
     const requests =
-        Object.values(allRequests || {})
-            .sort(
-                (a, b) =>
-                    (b.createdAt || 0) -
-                    (a.createdAt || 0)
-            );
+        Object.entries(
+            allRequests || {}
+        )
+
+        .map(([id, request]) => {
+
+            return {
+
+                ...request,
+
+                id: id
+
+            };
+
+        })
+
+        .sort(
+
+            (a, b) =>
+
+                (b.createdAt || 0) -
+                (a.createdAt || 0)
+
+        );
 
 
     updateStats(requests);
@@ -156,9 +173,12 @@ function renderRequests() {
 
         filtered =
             requests.filter(
+
                 request =>
+
                     request.status ===
                     currentFilter
+
             );
 
     }
@@ -170,9 +190,7 @@ function renderRequests() {
 
             <div class="empty">
 
-                <i
-                    class="fa-solid fa-inbox"
-                ></i>
+                <i class="fa-solid fa-inbox"></i>
 
                 <p>
                     لا توجد طلبات هنا
@@ -188,13 +206,19 @@ function renderRequests() {
 
 
     grid.innerHTML =
+
         filtered
+
             .map(
+
                 request =>
+
                     createRequestBox(
                         request
                     )
+
             )
+
             .join("");
 
 
@@ -215,19 +239,25 @@ function updateStats(requests) {
 
     const newCount =
         requests.filter(
+
             r => r.status === "new"
+
         ).length;
 
 
     const receivedCount =
         requests.filter(
+
             r => r.status === "received"
+
         ).length;
 
 
     const readyCount =
         requests.filter(
+
             r => r.status === "ready"
+
         ).length;
 
 
@@ -236,15 +266,18 @@ function updateStats(requests) {
         total
     );
 
+
     setText(
         "newRequests",
         newCount
     );
 
+
     setText(
         "receivedRequests",
         receivedCount
     );
+
 
     setText(
         "readyRequests",
@@ -262,6 +295,7 @@ function setText(id, value) {
 
     const element =
         document.getElementById(id);
+
 
     if (element) {
 
@@ -343,9 +377,11 @@ function getStatusInfo(status) {
 
         return {
 
-            text: "تم استلام الطلب",
+            text:
+                "تم استلام الطلب",
 
-            className: "received"
+            className:
+                "received"
 
         };
 
@@ -356,9 +392,11 @@ function getStatusInfo(status) {
 
         return {
 
-            text: "جاهز الطلب",
+            text:
+                "جاهز الطلب",
 
-            className: "ready"
+            className:
+                "ready"
 
         };
 
@@ -367,9 +405,11 @@ function getStatusInfo(status) {
 
     return {
 
-        text: "طلب جديد",
+        text:
+            "طلب جديد",
 
-        className: ""
+        className:
+            ""
 
     };
 
@@ -406,8 +446,7 @@ function createRequestBox(request) {
                 <div class="type">
 
                     <i
-                        class="fa-solid
-                        ${type.icon}"
+                        class="fa-solid ${type.icon}"
                     ></i>
 
                     ${type.title}
@@ -416,10 +455,11 @@ function createRequestBox(request) {
 
 
                 <div
-                    class="status
-                    ${status.className}"
+                    class="status ${status.className}"
                 >
+
                     ${status.text}
+
                 </div>
 
             </div>
@@ -489,11 +529,16 @@ function createRequestBox(request) {
     `;
 
 
+    // ======================================
     // نوع التركيبة
+    // ======================================
 
     if (
+
         request.type === "install" &&
+
         request.installType
+
     ) {
 
         html += `
@@ -517,11 +562,16 @@ function createRequestBox(request) {
     }
 
 
-    // المبلغ الأصلي
+    // ======================================
+    // المبلغ
+    // ======================================
 
     if (
+
         request.price !== undefined &&
+
         request.price !== null
+
     ) {
 
         html += `
@@ -545,7 +595,9 @@ function createRequestBox(request) {
     }
 
 
+    // ======================================
     // مقدم الطلب
+    // ======================================
 
     html += `
 
@@ -556,11 +608,17 @@ function createRequestBox(request) {
                     </span>
 
                     <strong>
+
                         ${escapeHtml(
+
                             request.employee ||
+
                             request.createdBy?.name ||
+
                             "غير معروف"
+
                         )}
+
                     </strong>
 
                 </div>
@@ -568,10 +626,14 @@ function createRequestBox(request) {
     `;
 
 
+    // ======================================
     // المكلف
+    // ======================================
 
     if (
+
         request.receivedBy?.name
+
     ) {
 
         html += `
@@ -583,9 +645,13 @@ function createRequestBox(request) {
                     </span>
 
                     <strong>
+
                         ${escapeHtml(
+
                             request.receivedBy.name
+
                         )}
+
                     </strong>
 
                 </div>
@@ -596,15 +662,22 @@ function createRequestBox(request) {
 
 
     html += `
+
             </div>
+
     `;
 
 
+    // ======================================
     // مشكلة الصيانة
+    // ======================================
 
     if (
+
         request.type === "maintenance" &&
+
         request.problem
+
     ) {
 
         html += `
@@ -616,9 +689,11 @@ function createRequestBox(request) {
                 </span>
 
                 <p>
+
                     ${escapeHtml(
                         request.problem
                     )}
+
                 </p>
 
             </div>
@@ -642,20 +717,24 @@ function createRequestBox(request) {
     // طلب جديد
 
     if (
+
         request.status === "new"
+
     ) {
 
         html += `
 
             <button
+
                 class="receive-btn"
+
                 data-action="receive"
+
                 data-id="${request.id}"
+
             >
 
-                <i
-                    class="fa-solid fa-hand"
-                ></i>
+                <i class="fa-solid fa-hand"></i>
 
                 تم استلام الطلب
 
@@ -669,20 +748,24 @@ function createRequestBox(request) {
     // تم الاستلام
 
     if (
+
         request.status === "received"
+
     ) {
 
         html += `
 
             <button
+
                 class="ready-btn"
+
                 data-action="ready"
+
                 data-id="${request.id}"
+
             >
 
-                <i
-                    class="fa-solid fa-check"
-                ></i>
+                <i class="fa-solid fa-check"></i>
 
                 جاهز الطلب
 
@@ -696,20 +779,24 @@ function createRequestBox(request) {
     // جاهز
 
     if (
+
         request.status === "ready"
+
     ) {
 
         html += `
 
             <button
+
                 class="details-btn"
+
                 data-action="details"
+
                 data-id="${request.id}"
+
             >
 
-                <i
-                    class="fa-solid fa-eye"
-                ></i>
+                <i class="fa-solid fa-eye"></i>
 
                 عرض التفاصيل
 
@@ -741,24 +828,31 @@ function createRequestBox(request) {
 function attachButtons() {
 
     document
+
         .querySelectorAll(
             "[data-action]"
         )
+
         .forEach(button => {
 
             button.addEventListener(
+
                 "click",
+
                 () => {
 
                     const action =
                         button.dataset.action;
+
 
                     const id =
                         button.dataset.id;
 
 
                     if (
+
                         action === "receive"
+
                     ) {
 
                         receiveRequest(id);
@@ -767,7 +861,9 @@ function attachButtons() {
 
 
                     if (
+
                         action === "ready"
+
                     ) {
 
                         openDetails(id);
@@ -776,7 +872,9 @@ function attachButtons() {
 
 
                     if (
+
                         action === "details"
+
                     ) {
 
                         showCompletedDetails(id);
@@ -784,6 +882,7 @@ function attachButtons() {
                     }
 
                 }
+
             );
 
         });
@@ -824,7 +923,9 @@ async function receiveRequest(id) {
 
 
     if (
+
         request.status !== "new"
+
     ) {
 
         return;
@@ -859,7 +960,8 @@ async function receiveRequest(id) {
 
             {
 
-                status: "received",
+                status:
+                    "received",
 
                 receivedAt:
                     Date.now(),
@@ -873,18 +975,25 @@ async function receiveRequest(id) {
 
 
         console.log(
-            "تم استلام الطلب:",
+            "✅ تم استلام الطلب:",
             id
         );
 
+    }
 
-    } catch (error) {
+    catch (error) {
 
-        console.error(error);
+        console.error(
+            "❌ خطأ استلام الطلب:",
+            error
+        );
 
         alert(
+
             "حدث خطأ أثناء استلام الطلب:\n" +
+
             error.message
+
         );
 
     }
@@ -939,9 +1048,34 @@ function openDetails(id) {
         );
 
 
-    // عنوان
+    if (!modal ||
+        !title ||
+        !sub ||
+        !problemField ||
+        !sectorField) {
 
-    if (request.type === "maintenance") {
+        console.error(
+            "❌ عناصر Modal ناقصة في requests.html"
+        );
+
+        alert(
+            "يوجد خطأ في نافذة تفاصيل التنفيذ"
+        );
+
+        return;
+
+    }
+
+
+    // ======================================
+    // حسب نوع الطلب
+    // ======================================
+
+    if (
+
+        request.type === "maintenance"
+
+    ) {
 
         title.textContent =
             "🛠 إنهاء طلب الصيانة";
@@ -954,9 +1088,10 @@ function openDetails(id) {
 
     }
 
-
     else if (
+
         request.type === "install"
+
     ) {
 
         title.textContent =
@@ -969,7 +1104,6 @@ function openDetails(id) {
             "block";
 
     }
-
 
     else {
 
@@ -986,40 +1120,78 @@ function openDetails(id) {
 
 
     sub.textContent =
-        `الزبون: ${request.name}`;
+        `الزبون: ${request.name || ""}`;
 
 
-    // تعبئة المشكلة
+    // ======================================
+    // تعبئة الحقول
+    // ======================================
 
-    document.getElementById(
-        "problemInput"
-    ).value =
-        request.problem || "";
-
-
-    // المبلغ
-
-    document.getElementById(
-        "priceInput"
-    ).value =
-        request.price || "";
+    const problemInput =
+        document.getElementById(
+            "problemInput"
+        );
 
 
-    // تنظيف الحقول
-
-    document.getElementById(
-        "signalInput"
-    ).value = "";
-
-
-    document.getElementById(
-        "towerInput"
-    ).value = "";
+    const priceInput =
+        document.getElementById(
+            "priceInput"
+        );
 
 
-    document.getElementById(
-        "sectorInput"
-    ).value = "";
+    const signalInput =
+        document.getElementById(
+            "signalInput"
+        );
+
+
+    const towerInput =
+        document.getElementById(
+            "towerInput"
+        );
+
+
+    const sectorInput =
+        document.getElementById(
+            "sectorInput"
+        );
+
+
+    if (problemInput) {
+
+        problemInput.value =
+            request.problem || "";
+
+    }
+
+
+    if (priceInput) {
+
+        priceInput.value =
+            request.price || "";
+
+    }
+
+
+    if (signalInput) {
+
+        signalInput.value = "";
+
+    }
+
+
+    if (towerInput) {
+
+        towerInput.value = "";
+
+    }
+
+
+    if (sectorInput) {
+
+        sectorInput.value = "";
+
+    }
 
 
     modal.classList.remove(
@@ -1034,12 +1206,17 @@ function openDetails(id) {
 // ==========================================
 
 document
+
     .getElementById(
         "cancelDetails"
     )
+
     ?.addEventListener(
+
         "click",
+
         closeModal
+
     );
 
 
@@ -1050,9 +1227,11 @@ function closeModal() {
 
 
     document
+
         .getElementById(
             "detailsModal"
         )
+
         ?.classList.add(
             "hidden"
         );
@@ -1061,22 +1240,35 @@ function closeModal() {
 
 
 // ==========================================
-// حفظ وإنهاء الطلب
+// زر حفظ وإنهاء
 // ==========================================
 
 document
+
     .getElementById(
         "saveDetails"
     )
+
     ?.addEventListener(
+
         "click",
+
         finishRequest
+
     );
 
+
+// ==========================================
+// حفظ وإنهاء الطلب
+// ==========================================
 
 async function finishRequest() {
 
     if (!selectedRequestId) {
+
+        alert(
+            "لم يتم تحديد طلب"
+        );
 
         return;
 
@@ -1112,53 +1304,97 @@ async function finishRequest() {
 
 
     // ======================================
-    // الحقول
+    // عناصر النموذج
+    // ======================================
+
+    const problemElement =
+        document.getElementById(
+            "problemInput"
+        );
+
+
+    const priceElement =
+        document.getElementById(
+            "priceInput"
+        );
+
+
+    const signalElement =
+        document.getElementById(
+            "signalInput"
+        );
+
+
+    const towerElement =
+        document.getElementById(
+            "towerInput"
+        );
+
+
+    const sectorElement =
+        document.getElementById(
+            "sectorInput"
+        );
+
+
+    if (
+
+        !priceElement ||
+
+        !signalElement ||
+
+        !towerElement ||
+
+        !sectorElement
+
+    ) {
+
+        console.error(
+            "❌ حقول التنفيذ ناقصة"
+        );
+
+        alert(
+            "خطأ: حقول تفاصيل التنفيذ غير موجودة في requests.html"
+        );
+
+        return;
+
+    }
+
+
+    // ======================================
+    // قراءة البيانات
     // ======================================
 
     const problem =
-        document
-            .getElementById(
-                "problemInput"
-            )
-            .value
-            .trim();
+
+        problemElement
+
+            ? problemElement.value.trim()
+
+            : "";
 
 
     const price =
+
         Number(
-            document
-                .getElementById(
-                    "priceInput"
-                )
-                .value
+            priceElement.value
         ) || 0;
 
 
     const signal =
-        document
-            .getElementById(
-                "signalInput"
-            )
-            .value
-            .trim();
+
+        signalElement.value.trim();
 
 
     const tower =
-        document
-            .getElementById(
-                "towerInput"
-            )
-            .value
-            .trim();
+
+        towerElement.value.trim();
 
 
     const sector =
-        document
-            .getElementById(
-                "sectorInput"
-            )
-            .value
-            .trim();
+
+        sectorElement.value.trim();
 
 
     // ======================================
@@ -1166,8 +1402,11 @@ async function finishRequest() {
     // ======================================
 
     if (
+
         request.type === "maintenance" &&
+
         !problem
+
     ) {
 
         alert(
@@ -1179,7 +1418,7 @@ async function finishRequest() {
     }
 
 
-    if (!price) {
+    if (price <= 0) {
 
         alert(
             "يرجى إدخال المبلغ"
@@ -1213,11 +1452,17 @@ async function finishRequest() {
 
 
     if (
+
         (
+
             request.type === "install" ||
+
             request.type === "transfer"
+
         ) &&
+
         !sector
+
     ) {
 
         alert(
@@ -1228,6 +1473,10 @@ async function finishRequest() {
 
     }
 
+
+    // ======================================
+    // الموظف المنفذ
+    // ======================================
 
     const employee = {
 
@@ -1245,6 +1494,39 @@ async function finishRequest() {
     };
 
 
+    const now =
+        Date.now();
+
+
+    // ======================================
+    // إنشاء ID للصيانة
+    // ======================================
+
+    const maintenanceRef =
+
+        push(
+            ref(
+                db,
+                "maintenance"
+            )
+        );
+
+
+    const maintenanceId =
+        maintenanceRef.key;
+
+
+    if (!maintenanceId) {
+
+        alert(
+            "تعذر إنشاء رقم سجل الصيانة"
+        );
+
+        return;
+
+    }
+
+
     // ======================================
     // بيانات التنفيذ
     // ======================================
@@ -1252,199 +1534,376 @@ async function finishRequest() {
     const execution = {
 
         problem:
+
             request.type === "maintenance"
+
                 ? problem
+
                 : "",
 
-        price,
 
-        signal,
+        price:
+            price,
 
-        tower,
+
+        signal:
+            signal,
+
+
+        tower:
+            tower,
+
 
         sector:
-            request.type === "maintenance"
-                ? ""
-                : sector,
 
-        completedBy:
-            employee,
+            (
+
+                request.type === "install" ||
+
+                request.type === "transfer"
+
+            )
+
+                ? sector
+
+                : "",
+
+
+        completedBy: {
+
+            uid:
+                employee.uid,
+
+            email:
+                employee.email,
+
+            name:
+                employee.name
+
+        },
+
 
         completedAt:
-            Date.now()
+            now
 
     };
 
 
-    try {
+    // ======================================
+    // بيانات الصيانة
+    // ======================================
 
-        // ==================================
-        // أولًا:
-        // إضافة السجل للنظام القديم
-        // Realtime Database → maintenance
-        // ==================================
+    const maintenanceData = {
 
-        const maintenanceRef =
-            push(
-                ref(
-                    db,
-                    "maintenance"
-                )
-            );
+        id:
+            maintenanceId,
+
+        requestId:
+            selectedRequestId,
+
+        type:
+            request.type || "",
+
+        name:
+            request.name || "",
+
+        national:
+            request.national || "",
+
+        location:
+            request.location || "",
+
+        phone:
+            request.phone || "",
+
+        problem:
+
+            request.type === "maintenance"
+
+                ? problem
+
+                : "",
 
 
-        const maintenanceData = {
+        installType:
+            request.installType || "",
 
-            id:
-                maintenanceRef.key,
 
-            type:
-                request.type,
-
-            name:
-                request.name || "",
-
-            national:
-                request.national || "",
-
-            location:
-                request.location || "",
-
-            phone:
-                request.phone || "",
-
-            problem:
-                request.type === "maintenance"
-                    ? problem
-                    : "",
-
-            installType:
-                request.installType || "",
-
+        price:
             price,
 
+
+        signal:
             signal,
 
+
+        tower:
             tower,
 
-            sector:
-                request.type === "maintenance"
-                    ? ""
-                    : sector,
 
-            transfer:
-                request.transfer || "",
+        sector:
 
-            dish:
-                request.dish || false,
+            (
 
-            dishSignal:
-                request.dishSignal || "",
+                request.type === "install" ||
 
-            // مقدم الطلب
-            employee:
-                request.employee || "",
+                request.type === "transfer"
 
-            uid:
-                request.uid || "",
+            )
 
-            email:
-                request.email || "",
+                ? sector
 
-            // المكلف / المنفذ
-            completedBy:
-                employee.name,
+                : "",
 
-            completedByUid:
-                employee.uid,
 
-            completedByEmail:
-                employee.email,
+        transfer:
+            request.transfer || "",
 
-            date:
-                new Date()
-                    .toLocaleDateString(
-                        "ar"
-                    ),
 
-            createdAt:
-                request.createdAt ||
-                Date.now(),
+        dish:
+            request.dish === true,
 
-            completedAt:
-                Date.now(),
 
-            requestId:
-                selectedRequestId
+        dishSignal:
+            request.dishSignal || "",
+
+
+        // ==================================
+        // مقدم الطلب
+        // ==================================
+
+        employee:
+
+            request.employee ||
+
+            request.createdBy?.name ||
+
+            "غير معروف",
+
+
+        uid:
+
+            request.uid ||
+
+            request.createdBy?.uid ||
+
+            "",
+
+
+        email:
+
+            request.email ||
+
+            request.createdBy?.email ||
+
+            "",
+
+
+        // ==================================
+        // المكلف
+        // ==================================
+
+        completedBy:
+            employee.name,
+
+        completedByUid:
+            employee.uid,
+
+        completedByEmail:
+            employee.email,
+
+
+        // ==================================
+        // التواريخ
+        // ==================================
+
+        date:
+            new Date()
+                .toLocaleDateString("ar"),
+
+
+        createdAt:
+
+            request.createdAt ||
+
+            now,
+
+
+        completedAt:
+            now
+
+    };
+
+
+    // ======================================
+    // تنفيذ الحفظ
+    // ======================================
+
+    try {
+
+        console.log(
+            "================================"
+        );
+
+        console.log(
+            "🟢 بدء إنهاء الطلب"
+        );
+
+        console.log(
+            "Request ID:",
+            selectedRequestId
+        );
+
+        console.log(
+            "Maintenance ID:",
+            maintenanceId
+        );
+
+
+        // ==================================
+        // تحديث الاثنين بعملية واحدة
+        // ==================================
+
+        const updates = {};
+
+
+        // الصيانة
+
+        updates[
+            `maintenance/${maintenanceId}`
+        ] =
+            maintenanceData;
+
+
+        // الطلب
+
+        updates[
+            `requests/${selectedRequestId}`
+        ] = {
+
+            ...request,
+
+            status:
+                "ready",
+
+            readyAt:
+                now,
+
+            readyBy:
+                employee,
+
+            execution:
+                execution,
+
+            maintenanceId:
+                maintenanceId
 
         };
 
 
-        await set(
-
-            maintenanceRef,
-
-            maintenanceData
-
+        console.log(
+            "البيانات التي سيتم حفظها:",
+            updates
         );
 
 
         // ==================================
-        // ثانيًا:
-        // تحديث الطلب
+        // الحفظ
         // ==================================
 
         await update(
-
-            ref(
-                db,
-                `requests/${selectedRequestId}`
-            ),
-
-            {
-
-                status: "ready",
-
-                readyAt:
-                    Date.now(),
-
-                readyBy:
-                    employee,
-
-                execution:
-
-                    execution,
-
-                maintenanceId:
-                    maintenanceRef.key
-
-            }
-
+            ref(db),
+            updates
         );
 
 
         console.log(
-            "تم إنهاء الطلب:",
-            selectedRequestId
+            "✅ تم حفظ الطلب والصيانة بنجاح"
         );
 
 
         alert(
-            "✅ تم إنهاء الطلب وحفظه ضمن الصيانات"
+            "✅ تم إنهاء الطلب بنجاح\n\n" +
+            "تم حفظه ضمن الصيانات"
         );
 
 
         closeModal();
 
 
-    } catch (error) {
+    }
 
-        console.error(error);
+    catch (error) {
 
-        alert(
-            "حدث خطأ أثناء إنهاء الطلب:\n" +
+        console.error(
+            "================================"
+        );
+
+        console.error(
+            "❌ ERROR FINISH REQUEST"
+        );
+
+        console.error(
+            "Code:",
+            error.code
+        );
+
+        console.error(
+            "Message:",
             error.message
         );
+
+        console.error(
+            "Full Error:",
+            error
+        );
+
+        console.error(
+            "================================"
+        );
+
+
+        let message =
+            "حدث خطأ أثناء إنهاء الطلب";
+
+
+        if (
+
+            error.code ===
+            "PERMISSION_DENIED"
+
+        ) {
+
+            message =
+
+                "❌ Firebase رفض عملية الحفظ\n\n" +
+
+                "تحقق من صلاحيات Realtime Database Rules.";
+
+        }
+
+        else {
+
+            message +=
+
+                "\n\nالكود: " +
+
+                (
+                    error.code ||
+                    "غير معروف"
+                ) +
+
+                "\n\nالرسالة: " +
+
+                (
+                    error.message ||
+                    "غير معروفة"
+                );
+
+        }
+
+
+        alert(message);
 
     }
 
@@ -1481,34 +1940,40 @@ function showCompletedDetails(id) {
 
     let message =
 
-        `الزبون: ${request.name}\n` +
+        `الزبون: ${request.name || ""}\n` +
 
         `النوع: ${getTypeInfo(
             request.type
         ).title}\n` +
 
-        `المبلغ: ${execution.price}\n` +
+        `المبلغ: ${execution.price || 0}\n` +
 
-        `الإشارة: ${execution.signal}\n` +
+        `الإشارة: ${execution.signal || ""}\n` +
 
-        `برج الربط: ${execution.tower}`;
+        `برج الربط: ${execution.tower || ""}`;
 
 
     if (
+
         execution.sector
+
     ) {
 
         message +=
+
             `\nالسكتور: ${execution.sector}`;
 
     }
 
 
     if (
+
         execution.problem
+
     ) {
 
         message +=
+
             `\nالمشكلة: ${execution.problem}`;
 
     }
@@ -1517,8 +1982,8 @@ function showCompletedDetails(id) {
     message +=
 
         `\nالمكلف: ${
-            execution.completedBy?.name
-            || "غير معروف"
+            execution.completedBy?.name ||
+            "غير معروف"
         }`;
 
 
@@ -1532,19 +1997,25 @@ function showCompletedDetails(id) {
 // ==========================================
 
 document
+
     .querySelectorAll(
         ".filter-btn"
     )
+
     .forEach(button => {
 
         button.addEventListener(
+
             "click",
+
             () => {
 
                 document
+
                     .querySelectorAll(
                         ".filter-btn"
                     )
+
                     .forEach(btn => {
 
                         btn.classList.remove(
@@ -1566,6 +2037,7 @@ document
                 renderRequests();
 
             }
+
         );
 
     });
@@ -1578,8 +2050,11 @@ document
 function escapeHtml(value) {
 
     if (
+
         value === undefined ||
+
         value === null
+
     ) {
 
         return "";
