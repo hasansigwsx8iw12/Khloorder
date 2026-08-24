@@ -1,7 +1,7 @@
 // ==========================================
 // KHLLO NET
 // profile.js
-// تعديل حساب الموظف
+// حساب الموظف
 // ==========================================
 
 import {
@@ -12,10 +12,15 @@ import {
 
 
 import {
-    ref as dbRef,
+    ref,
     get,
     update
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+
+import {
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 
 import {
@@ -23,12 +28,6 @@ import {
     uploadBytes,
     getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-
-
-import {
-    onAuthStateChanged,
-    signOut
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 
 // ==========================================
@@ -63,50 +62,65 @@ const message =
 
 let currentUser = null;
 
-
-// ==========================================
-// الصورة الجديدة
-// ==========================================
+let currentEmployee = null;
 
 let selectedPhoto = null;
+
+
+// ==========================================
+// صورة افتراضية
+// ==========================================
+
+const defaultPhoto =
+    "https://via.placeholder.com/125?text=User";
 
 
 // ==========================================
 // تسجيل الدخول
 // ==========================================
 
-onAuthStateChanged(auth, async (user) => {
+onAuthStateChanged(
+    auth,
+    async (user) => {
 
-    if (!user) {
+        if (!user) {
 
-        window.location.href =
-            "../login.html";
+            window.location.href =
+                "login.html";
 
-        return;
+            return;
+
+        }
+
+
+        currentUser = user;
+
+
+        console.log(
+            "المستخدم:",
+            user.uid
+        );
+
+
+        await loadProfile();
 
     }
-
-
-    currentUser = user;
-
-
-    await loadProfile(user.uid);
-
-});
+);
 
 
 // ==========================================
-// تحميل الحساب
+// تحميل بيانات الموظف
 // ==========================================
 
-async function loadProfile(uid) {
+async function loadProfile() {
 
     try {
 
         const employeeRef =
-            dbRef(
+            ref(
                 db,
-                "employees/" + uid
+                "employees/" +
+                currentUser.uid
             );
 
 
@@ -114,49 +128,76 @@ async function loadProfile(uid) {
             await get(employeeRef);
 
 
-        if (!snapshot.exists()) {
+        if (snapshot.exists()) {
 
-            showMessage(
-                "لا يوجد حساب موظف",
-                "error"
-            );
+            currentEmployee =
+                snapshot.val();
 
-            return;
+        } else {
+
+            currentEmployee = {};
 
         }
 
 
-        const data =
-            snapshot.val();
-
+        // الاسم
 
         nameInput.value =
-            data.name || "";
+            currentEmployee.name ||
+            localStorage.getItem(
+                "employeeName"
+            ) ||
+            "غير معروف";
 
+
+        // البريد
 
         emailInput.value =
-            data.email ||
+            currentEmployee.email ||
             currentUser.email ||
             "";
 
 
+        // الهاتف
+
         phoneInput.value =
-            data.phone || "";
+            currentEmployee.phone ||
+            "";
 
 
-        if (data.photo) {
+        // الصورة
+
+        if (
+            currentEmployee.photoURL
+        ) {
 
             profileImage.src =
-                data.photo;
+                currentEmployee.photoURL;
+
+        } else {
+
+            profileImage.src =
+                defaultPhoto;
 
         }
 
+
+        console.log(
+            "بيانات الموظف:",
+            currentEmployee
+        );
+
+
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "خطأ تحميل الحساب:",
+            error
+        );
+
 
         showMessage(
-            "حدث خطأ أثناء تحميل الحساب",
+            "حدث خطأ أثناء تحميل بيانات الحساب",
             "error"
         );
 
@@ -169,86 +210,103 @@ async function loadProfile(uid) {
 // اختيار الصورة
 // ==========================================
 
-photoInput.addEventListener(
-    "change",
-    (event) => {
+if (photoInput) {
 
-        const file =
-            event.target.files[0];
+    photoInput.addEventListener(
+        "change",
+        function () {
+
+            const file =
+                this.files[0];
 
 
-        if (!file) return;
+            if (!file) {
+
+                return;
+
+            }
 
 
-        // السماح بالصور فقط
+            // التأكد من أنها صورة
 
-        if (!file.type.startsWith("image/")) {
+            if (
+                !file.type.startsWith(
+                    "image/"
+                )
+            ) {
 
-            showMessage(
-                "الملف المختار ليس صورة",
-                "error"
-            );
+                showMessage(
+                    "الملف المختار ليس صورة",
+                    "error"
+                );
 
-            photoInput.value = "";
+                this.value = "";
 
-            return;
+                return;
+
+            }
+
+
+            // حجم الصورة
+            // 5MB
+
+            if (
+                file.size >
+                5 * 1024 * 1024
+            ) {
+
+                showMessage(
+                    "حجم الصورة يجب أن يكون أقل من 5MB",
+                    "error"
+                );
+
+                this.value = "";
+
+                return;
+
+            }
+
+
+            selectedPhoto =
+                file;
+
+
+            // عرض الصورة مباشرة
+
+            const reader =
+                new FileReader();
+
+
+            reader.onload =
+                function (event) {
+
+                    profileImage.src =
+                        event.target.result;
+
+                };
+
+
+            reader.readAsDataURL(file);
 
         }
+    );
 
-
-        // الحد الأقصى 5MB
-
-        if (file.size > 5 * 1024 * 1024) {
-
-            showMessage(
-                "حجم الصورة يجب أن يكون أقل من 5MB",
-                "error"
-            );
-
-            photoInput.value = "";
-
-            return;
-
-        }
-
-
-        selectedPhoto = file;
-
-
-        // معاينة
-
-        const reader =
-            new FileReader();
-
-
-        reader.onload =
-            function(e) {
-
-                profileImage.src =
-                    e.target.result;
-
-            };
-
-
-        reader.readAsDataURL(file);
-
-    }
-);
+}
 
 
 // ==========================================
 // حفظ الحساب
 // ==========================================
 
-saveBtn.addEventListener(
-    "click",
-    saveProfile
-);
+if (saveBtn) {
 
+    saveBtn.addEventListener(
+        "click",
+        saveProfile
+    );
 
-// ==========================================
-// حفظ
-// ==========================================
+}
+
 
 async function saveProfile() {
 
@@ -264,13 +322,13 @@ async function saveProfile() {
     }
 
 
+    // ======================================
+    // رقم الهاتف
+    // ======================================
+
     const phone =
         phoneInput.value.trim();
 
-
-    // ======================================
-    // رقم الهاتف إجباري
-    // ======================================
 
     if (!phone) {
 
@@ -278,6 +336,7 @@ async function saveProfile() {
             "رقم الهاتف إجباري",
             "error"
         );
+
 
         phoneInput.focus();
 
@@ -290,22 +349,13 @@ async function saveProfile() {
     // التحقق من الرقم
     // ======================================
 
-    const cleanPhone =
-        phone.replace(
-            /[\s\-()]/g,
-            ""
-        );
-
-
-    if (
-        cleanPhone.length < 8 ||
-        cleanPhone.length > 15
-    ) {
+    if (phone.length < 8) {
 
         showMessage(
             "يرجى إدخال رقم هاتف صحيح",
             "error"
         );
+
 
         phoneInput.focus();
 
@@ -329,7 +379,8 @@ async function saveProfile() {
 
 
         let photoURL =
-            profileImage.src;
+            currentEmployee?.photoURL ||
+            "";
 
 
         // ==================================
@@ -344,76 +395,151 @@ async function saveProfile() {
             );
 
 
-            const fileRef =
+            const fileExtension =
+                selectedPhoto.name
+                    .split(".")
+                    .pop();
+
+
+            const imageRef =
                 storageRef(
                     storage,
-                    `employees/${currentUser.uid}/profile.jpg`
+                    "employees/" +
+                    currentUser.uid +
+                    "/profile." +
+                    fileExtension
                 );
 
 
             const uploadResult =
                 await uploadBytes(
-                    fileRef,
+                    imageRef,
                     selectedPhoto
                 );
 
 
+            console.log(
+                "تم رفع الصورة:",
+                uploadResult
+            );
+
+
             photoURL =
                 await getDownloadURL(
-                    uploadResult.ref
+                    imageRef
                 );
+
+
+            console.log(
+                "رابط الصورة:",
+                photoURL
+            );
 
         }
 
 
         // ==================================
-        // تحديث بيانات الموظف
+        // بيانات الموظف
         // ==================================
 
-        const employeeRef =
-            dbRef(
+        const employeeData = {
+
+            phone:
+
+                phone,
+
+            photoURL:
+
+                photoURL,
+
+            updatedAt:
+
+                Date.now()
+
+        };
+
+
+        // ==================================
+        // تحديث Firebase
+        // ==================================
+
+        await update(
+
+            ref(
                 db,
                 "employees/" +
                 currentUser.uid
-            );
+            ),
 
+            employeeData
 
-        await update(
-            employeeRef,
-            {
-
-                phone:
-                    cleanPhone,
-
-                photo:
-                    photoURL,
-
-                updatedAt:
-                    Date.now()
-
-            }
         );
 
 
         // ==================================
-        // تحديث LocalStorage
+        // تحديث البيانات المحلية
         // ==================================
 
         localStorage.setItem(
             "employeePhone",
-            cleanPhone
+            phone
         );
 
 
-        localStorage.setItem(
-            "employeePhoto",
-            photoURL
-        );
+        if (photoURL) {
+
+            localStorage.setItem(
+                "employeePhoto",
+                photoURL
+            );
+
+        }
+
+
+        if (
+            currentEmployee
+        ) {
+
+            currentEmployee.phone =
+                phone;
+
+            currentEmployee.photoURL =
+                photoURL;
+
+        }
+
+
+        selectedPhoto = null;
 
 
         showMessage(
-            "✅ تم حفظ بيانات الحساب بنجاح",
+            "✅ تم حفظ الحساب بنجاح",
             "success"
+        );
+
+
+        saveBtn.innerHTML = `
+
+            <i class="fa-solid fa-check"></i>
+
+            تم الحفظ
+
+        `;
+
+
+        setTimeout(
+            () => {
+
+                saveBtn.innerHTML = `
+
+                    <i class="fa-solid fa-floppy-disk"></i>
+
+                    حفظ التعديلات
+
+                `;
+
+            },
+            2000
         );
 
 
@@ -426,15 +552,10 @@ async function saveProfile() {
 
 
         showMessage(
-            "حدث خطأ أثناء الحفظ: " +
+            "حدث خطأ: " +
             error.message,
             "error"
         );
-
-
-    } finally {
-
-        saveBtn.disabled = false;
 
 
         saveBtn.innerHTML = `
@@ -444,6 +565,10 @@ async function saveProfile() {
             حفظ التعديلات
 
         `;
+
+    } finally {
+
+        saveBtn.disabled = false;
 
     }
 
@@ -459,6 +584,9 @@ function showMessage(
     type
 ) {
 
+    if (!message) return;
+
+
     message.textContent =
         text;
 
@@ -467,21 +595,21 @@ function showMessage(
         type;
 
 
+    setTimeout(
+        () => {
+
+            if (
+                message.textContent ===
+                text
+            ) {
+
+                message.textContent =
+                    "";
+
+            }
+
+        },
+        4000
+    );
+
 }
-
-
-// ==========================================
-// تسجيل الخروج
-// ==========================================
-
-window.logout =
-    async function() {
-
-        await signOut(auth);
-
-        localStorage.clear();
-
-        window.location.href =
-            "../login.html";
-
-    };
