@@ -1,750 +1,1597 @@
-import { db, auth } from "./firebase.js";
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 
-import {
-    ref,
-    onValue,
-    update,
-    push,
-    set
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+<head>
 
-import {
-    onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    <meta charset="UTF-8">
 
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-const grid = document.getElementById("requestsGrid");
-
-const totalRequests = document.getElementById("totalRequests");
-const newRequests = document.getElementById("newRequests");
-const receivedRequests = document.getElementById("receivedRequests");
-const readyRequests = document.getElementById("readyRequests");
+    <title>KHLLO NET | الطلبات</title>
 
 
-const modal = document.getElementById("detailsModal");
-const modalTitle = document.getElementById("modalTitle");
-const modalSub = document.getElementById("modalSub");
+    <!-- Font Awesome -->
 
-const problemField = document.getElementById("problemField");
-const sectorField = document.getElementById("sectorField");
-
-const problemInput = document.getElementById("problemInput");
-const priceInput = document.getElementById("priceInput");
-const signalInput = document.getElementById("signalInput");
-const towerInput = document.getElementById("towerInput");
-const sectorInput = document.getElementById("sectorInput");
-
-const cancelDetails = document.getElementById("cancelDetails");
-const saveDetails = document.getElementById("saveDetails");
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
 
 
-let currentRequest = null;
-let currentUid = null;
+    <!-- Cairo -->
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
 
 
-// ============================================
-// تسجيل الدخول
-// ============================================
+    <style>
 
-onAuthStateChanged(auth, (user) => {
-
-    if (!user) {
-
-        window.location.href = "login.html";
-
-        return;
-
-    }
-
-    currentUid = user.uid;
-
-    loadRequests();
-
-});
+        *{
+            box-sizing:border-box;
+            margin:0;
+            padding:0;
+        }
 
 
-// ============================================
-// تحميل الطلبات
-// ============================================
+        :root{
 
-function loadRequests() {
+            --bg:#04100b;
 
-    onValue(ref(db, "requests"), (snapshot) => {
+            --card:#0b2118;
 
-        grid.innerHTML = "";
+            --card2:#071910;
 
-        let total = 0;
-        let newCount = 0;
-        let receivedCount = 0;
-        let readyCount = 0;
+            --green:#28ed91;
 
-        let requests = [];
+            --dark:#0a9c62;
 
-        snapshot.forEach((item) => {
+            --text:#f4fff9;
 
-            const data = item.val();
+            --muted:#91afa1;
 
-            requests.push({
-                id: item.key,
-                data: data
-            });
+            --orange:#ffb84d;
 
-        });
+            --blue:#67a4ff;
+
+            --red:#ff6877;
+
+            --border:#28ed9125;
+
+        }
 
 
-        // الأحدث أولاً
-        requests.reverse();
+        body{
+
+            min-height:100vh;
+
+            font-family:
+                'Cairo',
+                Arial,
+                sans-serif;
+
+            background:
+
+                radial-gradient(
+                    circle at 15% 10%,
+                    #164d3480,
+                    transparent 30%
+                ),
+
+                radial-gradient(
+                    circle at 90% 90%,
+                    #0b714c55,
+                    transparent 30%
+                ),
+
+                var(--bg);
+
+            color:var(--text);
+
+        }
 
 
-        requests.forEach((item) => {
+        /* ================= SIDEBAR ================= */
 
-            const data = item.data;
+        .sidebar{
 
-            total++;
+            width:260px;
+
+            height:100vh;
+
+            position:fixed;
+
+            top:0;
+
+            right:0;
+
+            background:#0b2118;
+
+            border-left:
+                1px solid
+                rgba(40,237,145,.15);
+
+            box-shadow:
+                0 0 25px #0008;
+
+            z-index:1000;
+
+        }
 
 
-            const status = data.status || "new";
+        .side-logo{
+
+            height:90px;
+
+            display:flex;
+
+            align-items:center;
+
+            justify-content:center;
+
+            color:#fff;
+
+            font-size:22px;
+
+            font-weight:800;
+
+            border-bottom:
+                1px solid
+                #ffffff18;
+
+        }
 
 
-            if (status === "new") {
-                newCount++;
+        .sidebar ul{
+
+            list-style:none;
+
+            padding:15px 10px;
+
+        }
+
+
+        .sidebar li{
+
+            margin:8px 0;
+
+        }
+
+
+        .sidebar a{
+
+            color:#fff;
+
+            text-decoration:none;
+
+            display:flex;
+
+            align-items:center;
+
+            gap:15px;
+
+            padding:14px 16px;
+
+            border-radius:12px;
+
+            transition:.3s;
+
+            font-size:15px;
+
+            cursor:pointer;
+
+        }
+
+
+        .sidebar a:hover{
+
+            background:#28ed9125;
+
+        }
+
+
+        .sidebar li.active a{
+
+            background:var(--green);
+
+            color:#04100b;
+
+            box-shadow:
+                0 5px 20px
+                #28ed9135;
+
+        }
+
+
+        .sidebar i{
+
+            width:22px;
+
+            text-align:center;
+
+            font-size:18px;
+
+        }
+
+
+        /* ================= PAGE ================= */
+
+        .page{
+
+            width:calc(100% - 260px);
+
+            margin-right:260px;
+
+            padding:30px;
+
+        }
+
+
+        .brand{
+
+            display:flex;
+
+            align-items:center;
+
+            gap:12px;
+
+            margin-bottom:25px;
+
+        }
+
+
+        .logo{
+
+            width:55px;
+
+            height:55px;
+
+            border-radius:17px;
+
+            display:grid;
+
+            place-items:center;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--green),
+                    var(--dark)
+                );
+
+            color:#03140d;
+
+            font-size:29px;
+
+            font-weight:900;
+
+        }
+
+
+        .brand h2{
+
+            font-size:22px;
+
+        }
+
+
+        .brand p{
+
+            font-size:12px;
+
+            color:var(--muted);
+
+            margin-top:3px;
+
+        }
+
+
+        /* ================= STATS ================= */
+
+        .stats{
+
+            display:grid;
+
+            grid-template-columns:
+                repeat(4,1fr);
+
+            gap:15px;
+
+            margin-bottom:22px;
+
+        }
+
+
+        .stat{
+
+            background:#0b2118ee;
+
+            border:
+                1px solid
+                var(--border);
+
+            border-radius:20px;
+
+            padding:20px;
+
+        }
+
+
+        .stat i{
+
+            color:var(--green);
+
+            font-size:22px;
+
+            margin-bottom:8px;
+
+        }
+
+
+        .stat span{
+
+            display:block;
+
+            color:var(--muted);
+
+            font-size:13px;
+
+        }
+
+
+        .stat strong{
+
+            display:block;
+
+            font-size:28px;
+
+            color:var(--green);
+
+            margin-top:3px;
+
+        }
+
+
+        /* ================= REQUESTS ================= */
+
+        .requests{
+
+            background:#0b2118ee;
+
+            border:
+                1px solid
+                var(--border);
+
+            border-radius:23px;
+
+            padding:25px;
+
+        }
+
+
+        .title{
+
+            margin-bottom:22px;
+
+        }
+
+
+        .title h1{
+
+            font-size:24px;
+
+        }
+
+
+        .title p{
+
+            color:var(--muted);
+
+            font-size:12px;
+
+            margin-top:5px;
+
+        }
+
+
+        /* ================= FILTER ================= */
+
+        .filters{
+
+            display:flex;
+
+            gap:10px;
+
+            flex-wrap:wrap;
+
+            margin-bottom:22px;
+
+        }
+
+
+        .filter-btn{
+
+            border:
+                1px solid
+                var(--border);
+
+            background:#071910;
+
+            color:#fff;
+
+            border-radius:12px;
+
+            padding:10px 15px;
+
+            font-family:inherit;
+
+            cursor:pointer;
+
+            transition:.3s;
+
+        }
+
+
+        .filter-btn:hover{
+
+            border-color:var(--green);
+
+        }
+
+
+        .filter-btn.active{
+
+            background:var(--green);
+
+            color:#04100b;
+
+            font-weight:bold;
+
+        }
+
+
+        /* ================= GRID ================= */
+
+        .requests-grid{
+
+            display:grid;
+
+            grid-template-columns:
+                repeat(
+                    auto-fill,
+                    minmax(330px,1fr)
+                );
+
+            gap:18px;
+
+        }
+
+
+        /* ================= REQUEST BOX ================= */
+
+        .request-box{
+
+            background:#071910;
+
+            border:
+                1px solid
+                var(--border);
+
+            border-radius:20px;
+
+            padding:20px;
+
+            transition:.3s;
+
+        }
+
+
+        .request-box:hover{
+
+            transform:translateY(-3px);
+
+            border-color:#28ed9155;
+
+            box-shadow:
+                0 15px 40px
+                #0006;
+
+        }
+
+
+        .request-head{
+
+            display:flex;
+
+            align-items:center;
+
+            justify-content:space-between;
+
+            gap:10px;
+
+            margin-bottom:15px;
+
+        }
+
+
+        .type{
+
+            display:inline-flex;
+
+            align-items:center;
+
+            gap:7px;
+
+            color:var(--green);
+
+            font-weight:bold;
+
+        }
+
+
+        .status{
+
+            padding:5px 10px;
+
+            border-radius:20px;
+
+            font-size:11px;
+
+            background:#ffb84d18;
+
+            color:var(--orange);
+
+            white-space:nowrap;
+
+        }
+
+
+        .status.received{
+
+            background:#28ed9118;
+
+            color:var(--green);
+
+        }
+
+
+        .status.ready{
+
+            background:#438cff18;
+
+            color:var(--blue);
+
+        }
+
+
+        /* ================= INFO ================= */
+
+        .info{
+
+            display:grid;
+
+            gap:9px;
+
+            margin-bottom:18px;
+
+        }
+
+
+        .info div{
+
+            display:flex;
+
+            justify-content:space-between;
+
+            gap:10px;
+
+            font-size:13px;
+
+            border-bottom:
+                1px solid
+                #ffffff08;
+
+            padding-bottom:7px;
+
+        }
+
+
+        .info span{
+
+            color:var(--muted);
+
+        }
+
+
+        .info strong{
+
+            color:#fff;
+
+            text-align:left;
+
+            max-width:60%;
+
+            overflow-wrap:anywhere;
+
+        }
+
+
+        /* ================= PROBLEM ================= */
+
+        .problem{
+
+            background:#ffffff05;
+
+            border-radius:12px;
+
+            padding:12px;
+
+            margin-bottom:15px;
+
+        }
+
+
+        .problem span{
+
+            display:block;
+
+            color:var(--muted);
+
+            font-size:11px;
+
+            margin-bottom:4px;
+
+        }
+
+
+        .problem p{
+
+            font-size:13px;
+
+            line-height:1.8;
+
+        }
+
+
+        /* ================= BUTTONS ================= */
+
+        .request-actions{
+
+            display:flex;
+
+            flex-direction:column;
+
+            gap:8px;
+
+        }
+
+
+        .request-actions button{
+
+            width:100%;
+
+            border:0;
+
+            border-radius:12px;
+
+            padding:12px;
+
+            font-family:inherit;
+
+            font-weight:bold;
+
+            cursor:pointer;
+
+            transition:.3s;
+
+        }
+
+
+        .request-actions button:hover{
+
+            transform:translateY(-2px);
+
+        }
+
+
+        .receive-btn{
+
+            background:var(--green);
+
+            color:#04100b;
+
+        }
+
+
+        .ready-btn{
+
+            background:var(--blue);
+
+            color:#07101f;
+
+        }
+
+
+        .details-btn{
+
+            background:#162d24;
+
+            color:#fff;
+
+        }
+
+
+        .request-actions button:disabled{
+
+            opacity:.5;
+
+            cursor:not-allowed;
+
+            transform:none;
+
+        }
+
+
+        /* ================= EMPTY ================= */
+
+        .empty{
+
+            grid-column:1/-1;
+
+            text-align:center;
+
+            padding:60px 20px;
+
+            color:var(--muted);
+
+        }
+
+
+        .empty i{
+
+            font-size:50px;
+
+            color:#28ed9140;
+
+            margin-bottom:15px;
+
+        }
+
+
+        .empty p{
+
+            font-size:14px;
+
+        }
+
+
+        /* ================= LOADING ================= */
+
+        .loading{
+
+            grid-column:1/-1;
+
+            text-align:center;
+
+            padding:50px;
+
+            color:var(--muted);
+
+        }
+
+
+        .loading i{
+
+            font-size:35px;
+
+            color:var(--green);
+
+            margin-bottom:12px;
+
+        }
+
+
+        /* ================= MODAL ================= */
+
+        .modal{
+
+            position:fixed;
+
+            inset:0;
+
+            background:#000b;
+
+            display:flex;
+
+            align-items:center;
+
+            justify-content:center;
+
+            padding:20px;
+
+            z-index:2000;
+
+        }
+
+
+        .modal.hidden{
+
+            display:none;
+
+        }
+
+
+        .modal-box{
+
+            width:min(550px,100%);
+
+            max-height:90vh;
+
+            overflow:auto;
+
+            background:#0b2118;
+
+            border:
+                1px solid
+                #28ed9140;
+
+            border-radius:23px;
+
+            padding:25px;
+
+            box-shadow:
+                0 25px 80px
+                #000;
+
+        }
+
+
+        .modal-box h2{
+
+            margin-bottom:5px;
+
+        }
+
+
+        .modal-sub{
+
+            color:var(--muted);
+
+            font-size:12px;
+
+            margin-bottom:20px;
+
+        }
+
+
+        .field{
+
+            margin-bottom:13px;
+
+        }
+
+
+        .field label{
+
+            display:block;
+
+            color:var(--muted);
+
+            font-size:12px;
+
+            margin-bottom:6px;
+
+        }
+
+
+        .field input,
+
+        .field textarea,
+
+        .field select{
+
+            width:100%;
+
+            padding:12px;
+
+            border:
+                1px solid
+                #28ed9130;
+
+            border-radius:12px;
+
+            background:#0005;
+
+            color:#fff;
+
+            outline:none;
+
+            font-family:inherit;
+
+        }
+
+
+        .field textarea{
+
+            min-height:90px;
+
+            resize:vertical;
+
+        }
+
+
+        .field input:focus,
+
+        .field textarea:focus,
+
+        .field select:focus{
+
+            border-color:var(--green);
+
+        }
+
+
+        .modal-actions{
+
+            display:flex;
+
+            gap:10px;
+
+            margin-top:20px;
+
+        }
+
+
+        .modal-actions button{
+
+            flex:1;
+
+            border:0;
+
+            border-radius:12px;
+
+            padding:12px;
+
+            font-family:inherit;
+
+            font-weight:bold;
+
+            cursor:pointer;
+
+        }
+
+
+        .cancel-btn{
+
+            background:#162d24;
+
+            color:#fff;
+
+        }
+
+
+        .save-btn{
+
+            background:var(--green);
+
+            color:#04100b;
+
+        }
+
+
+        /* ================= MOBILE ================= */
+
+        @media(max-width:900px){
+
+            .stats{
+
+                grid-template-columns:
+                    repeat(2,1fr);
+
             }
 
-            if (status === "received") {
-                receivedCount++;
+        }
+
+
+        @media(max-width:700px){
+
+            .sidebar{
+
+                width:75px;
+
             }
 
-            if (status === "ready") {
-                readyCount++;
+
+            .side-logo{
+
+                font-size:0;
+
+                height:75px;
+
             }
 
 
-            grid.innerHTML += createRequestBox(
-                item.id,
-                data
-            );
+            .side-logo::after{
 
-        });
+                content:"K";
 
+                font-size:26px;
 
-        totalRequests.innerText = total;
-        newRequests.innerText = newCount;
-        receivedRequests.innerText = receivedCount;
-        readyRequests.innerText = readyCount;
+            }
 
 
-        if (total === 0) {
+            .sidebar a{
 
-            grid.innerHTML = `
+                justify-content:center;
 
-                <div class="empty">
+                padding:14px 8px;
+
+            }
+
+
+            .sidebar a span{
+
+                display:none;
+
+            }
+
+
+            .sidebar i{
+
+                font-size:20px;
+
+            }
+
+
+            .page{
+
+                width:calc(100% - 75px);
+
+                margin-right:75px;
+
+                padding:15px;
+
+            }
+
+
+            .requests{
+
+                padding:17px;
+
+            }
+
+
+            .requests-grid{
+
+                grid-template-columns:1fr;
+
+            }
+
+
+            .request-head{
+
+                align-items:flex-start;
+
+            }
+
+        }
+
+
+        @media(max-width:500px){
+
+            .stats{
+
+                grid-template-columns:
+                    1fr 1fr;
+
+            }
+
+
+            .stat{
+
+                padding:15px;
+
+            }
+
+
+            .stat strong{
+
+                font-size:23px;
+
+            }
+
+
+            .modal-box{
+
+                padding:18px;
+
+            }
+
+
+            .modal-actions{
+
+                flex-direction:column;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- ================= SIDEBAR ================= -->
+
+    <aside class="sidebar">
+
+        <div class="side-logo">
+            KHLLO NET
+        </div>
+
+
+        <ul>
+
+            <li>
+
+                <a href="index.html">
+
+                    <i class="fa-solid fa-house"></i>
+
+                    <span>الرئيسية</span>
+
+                </a>
+
+            </li>
+
+
+            <li>
+
+                <a href="add.html">
+
+                    <i class="fa-solid fa-plus"></i>
+
+                    <span>إضافة طلب</span>
+
+                </a>
+
+            </li>
+
+
+            <li class="active">
+
+                <a href="requests.html">
 
                     <i class="fa-solid fa-inbox"></i>
 
+                    <span>الطلبات</span>
+
+                </a>
+
+            </li>
+
+
+            <li>
+
+                <a href="repairs.html">
+
+                    <i class="fa-solid fa-screwdriver-wrench"></i>
+
+                    <span>الصيانات</span>
+
+                </a>
+
+            </li>
+
+
+            <li>
+
+                <a href="daily.html">
+
+                    <i class="fa-solid fa-calendar-days"></i>
+
+                    <span>السجل اليومي</span>
+
+                </a>
+
+            </li>
+
+
+            <li>
+
+                <a href="accounts.html">
+
+                    <i class="fa-solid fa-wallet"></i>
+
+                    <span>الحسابات</span>
+
+                </a>
+
+            </li>
+
+
+            <li>
+
+                <a href="users.html">
+
+                    <i class="fa-solid fa-users"></i>
+
+                    <span>المستخدمون</span>
+
+                </a>
+
+            </li>
+
+
+            <li>
+
+                <a
+                    href="javascript:void(0)"
+                    onclick="logout()"
+                >
+
+                    <i class="fa-solid fa-right-from-bracket"></i>
+
+                    <span>تسجيل الخروج</span>
+
+                </a>
+
+            </li>
+
+        </ul>
+
+    </aside>
+
+
+
+    <!-- ================= PAGE ================= -->
+
+    <main class="page">
+
+
+        <!-- BRAND -->
+
+        <header class="brand">
+
+            <div class="logo">
+                K
+            </div>
+
+
+            <div>
+
+                <h2>
+                    KHLLO NET
+                </h2>
+
+                <p>
+                    إدارة الطلبات ومتابعة تنفيذها
+                </p>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- ================= STATS ================= -->
+
+        <section class="stats">
+
+
+            <div class="stat">
+
+                <i class="fa-solid fa-inbox"></i>
+
+                <span>
+                    كل الطلبات
+                </span>
+
+                <strong id="totalRequests">
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="stat">
+
+                <i class="fa-solid fa-clock"></i>
+
+                <span>
+                    طلبات جديدة
+                </span>
+
+                <strong id="newRequests">
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="stat">
+
+                <i class="fa-solid fa-hand"></i>
+
+                <span>
+                    تم الاستلام
+                </span>
+
+                <strong id="receivedRequests">
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="stat">
+
+                <i class="fa-solid fa-check"></i>
+
+                <span>
+                    جاهزة
+                </span>
+
+                <strong id="readyRequests">
+                    0
+                </strong>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- ================= REQUESTS ================= -->
+
+        <section class="requests">
+
+
+            <div class="title">
+
+                <h1>
+                    الطلبات
+                </h1>
+
+                <p>
+                    جميع الطلبات الواردة إلى KHLLO NET
+                </p>
+
+            </div>
+
+
+
+            <!-- FILTERS -->
+
+            <div class="filters">
+
+                <button
+                    class="filter-btn active"
+                    data-filter="all"
+                >
+                    الكل
+                </button>
+
+
+                <button
+                    class="filter-btn"
+                    data-filter="new"
+                >
+                    🆕 جديدة
+                </button>
+
+
+                <button
+                    class="filter-btn"
+                    data-filter="received"
+                >
+                    📥 مستلمة
+                </button>
+
+
+                <button
+                    class="filter-btn"
+                    data-filter="ready"
+                >
+                    ✅ جاهزة
+                </button>
+
+            </div>
+
+
+
+            <!-- REQUESTS GRID -->
+
+            <div
+                id="requestsGrid"
+                class="requests-grid"
+            >
+
+                <div class="loading">
+
+                    <i
+                        class="fa-solid fa-spinner fa-spin"
+                    ></i>
+
                     <p>
-                        لا توجد طلبات حالياً
+                        جاري تحميل الطلبات...
                     </p>
 
                 </div>
 
-            `;
-
-        }
-
-    });
-
-}
+            </div>
 
 
-// ============================================
-// إنشاء Box
-// ============================================
-
-function createRequestBox(id, data) {
-
-    const type = data.type || "صيانة";
-
-    let icon = "fa-screwdriver-wrench";
-
-    if (type === "تركيبة") {
-        icon = "fa-satellite-dish";
-    }
-
-    if (type === "قلبة") {
-        icon = "fa-repeat";
-    }
+        </section>
 
 
-    let statusText = "طلب جديد";
-    let statusClass = "";
+    </main>
 
 
-    if (data.status === "received") {
 
-        statusText = "تم استلام الطلب";
-        statusClass = "received";
+    <!-- ================= DETAILS MODAL ================= -->
 
-    }
+    <div
+        id="detailsModal"
+        class="modal hidden"
+    >
 
-    else if (data.status === "ready") {
-
-        statusText = "جاهز";
-        statusClass = "ready";
-
-    }
-
-    else if (data.status === "completed") {
-
-        statusText = "مكتمل";
-        statusClass = "ready";
-
-    }
+        <div class="modal-box">
 
 
-    let button = "";
+            <h2 id="modalTitle">
+                تفاصيل التنفيذ
+            </h2>
 
 
-    // الطلب الجديد
-    if (data.status === "new" || !data.status) {
-
-        button = `
-
-            <button
-                onclick="receiveRequest('${id}')"
+            <p
+                id="modalSub"
+                class="modal-sub"
             >
-                <i class="fa-solid fa-hand"></i>
-                تم استلام الطلب
-            </button>
-
-        `;
-
-    }
+                أدخل معلومات تنفيذ الطلب
+            </p>
 
 
-    // تم الاستلام
-    else if (data.status === "received") {
+            <!-- مشكلة الصيانة -->
 
-        button = `
-
-            <button
-                class="orange"
-                onclick="readyRequest('${id}')"
+            <div
+                class="field"
+                id="problemField"
             >
-                <i class="fa-solid fa-check"></i>
-                جاهز الطلب
-            </button>
 
-        `;
+                <label>
+                    مشكلة الزبون
+                </label>
 
-    }
-
-
-    // جاهز
-    else if (data.status === "ready") {
-
-        button = `
-
-            <button
-                onclick="openDetails(
-                    '${id}',
-                    '${escapeHtml(type)}'
-                )"
-            >
-                <i class="fa-solid fa-clipboard-check"></i>
-                إدخال تفاصيل التنفيذ
-            </button>
-
-        `;
-
-    }
-
-
-    // مكتمل
-    else {
-
-        button = `
-
-            <div style="
-                text-align:center;
-                color:#28ed91;
-                font-weight:bold;
-                padding:10px;
-            ">
-
-                <i class="fa-solid fa-circle-check"></i>
-                تم تنفيذ الطلب
+                <textarea
+                    id="problemInput"
+                    placeholder="اكتب مشكلة الزبون..."
+                ></textarea>
 
             </div>
 
-        `;
 
-    }
+            <!-- المبلغ -->
 
+            <div class="field">
 
-    return `
+                <label>
+                    المبلغ الذي تم أخذه من الزبون
+                </label>
 
-    <div class="request-box">
-
-        <div class="request-head">
-
-            <div class="type">
-
-                <i class="fa-solid ${icon}"></i>
-
-                ${type}
+                <input
+                    id="priceInput"
+                    type="number"
+                    min="0"
+                    placeholder="مثلاً 50000"
+                >
 
             </div>
 
-            <div class="status ${statusClass}">
-                ${statusText}
+
+            <!-- الإشارة -->
+
+            <div class="field">
+
+                <label>
+                    الإشارة
+                </label>
+
+                <input
+                    id="signalInput"
+                    placeholder="مثلاً 80%"
+                >
+
             </div>
+
+
+            <!-- برج الربط -->
+
+            <div class="field">
+
+                <label>
+                    برج الربط
+                </label>
+
+                <input
+                    id="towerInput"
+                    placeholder="اسم برج الربط"
+                >
+
+            </div>
+
+
+            <!-- السكتور -->
+
+            <div
+                class="field"
+                id="sectorField"
+            >
+
+                <label>
+                    السكتور
+                </label>
+
+                <input
+                    id="sectorInput"
+                    placeholder="اسم السكتور"
+                >
+
+            </div>
+
+
+            <!-- ACTIONS -->
+
+            <div class="modal-actions">
+
+                <button
+                    id="cancelDetails"
+                    class="cancel-btn"
+                    type="button"
+                >
+                    إلغاء
+                </button>
+
+
+                <button
+                    id="saveDetails"
+                    class="save-btn"
+                    type="button"
+                >
+                    حفظ وإنهاء الطلب
+                </button>
+
+            </div>
+
 
         </div>
-
-
-        <div class="info">
-
-            <div>
-                <span>اسم الزبون</span>
-                <strong>${escapeHtml(data.name || "-")}</strong>
-            </div>
-
-
-            ${
-                data.national
-                ?
-                `
-                <div>
-                    <span>الرقم الوطني</span>
-                    <strong>${escapeHtml(data.national)}</strong>
-                </div>
-                `
-                :
-                ""
-            }
-
-
-            <div>
-                <span>الموقع</span>
-                <strong>${escapeHtml(data.location || "-")}</strong>
-            </div>
-
-
-            <div>
-                <span>رقم الهاتف</span>
-                <strong>${escapeHtml(data.phone || "-")}</strong>
-            </div>
-
-
-            <div>
-                <span>مقدم الطلب</span>
-                <strong>${escapeHtml(data.requester || "-")}</strong>
-            </div>
-
-
-            <div>
-                <span>المكلف</span>
-                <strong>${escapeHtml(
-                    data.assignee ||
-                    data.employee ||
-                    "-"
-                )}</strong>
-            </div>
-
-
-            <div>
-                <span>التاريخ</span>
-                <strong>${escapeHtml(data.date || "-")}</strong>
-            </div>
-
-        </div>
-
-
-        ${
-            type === "صيانة"
-            ?
-            `
-            <div class="problem">
-
-                <span>مشكلة الزبون</span>
-
-                <p>
-                    ${escapeHtml(data.problem || "لم يتم تحديد المشكلة")}
-                </p>
-
-            </div>
-            `
-            :
-            ""
-        }
-
-
-        ${button}
 
     </div>
 
-    `;
 
-}
 
+    <!-- ================= SCRIPTS ================= -->
 
-// ============================================
-// تم استلام الطلب
-// ============================================
+    <script
+        type="module"
+        src="protect.js"
+    ></script>
 
-window.receiveRequest = async function(id) {
 
-    try {
+    <script
+        type="module"
+        src="requests.js"
+    ></script>
 
-        await update(
-            ref(db, `requests/${id}`),
-            {
-                status: "received",
-                receivedAt: Date.now(),
-                receivedBy: currentUid
-            }
-        );
 
-    }
+</body>
 
-    catch (error) {
-
-        console.error(error);
-
-        alert("حدث خطأ أثناء استلام الطلب");
-
-    }
-
-};
-
-
-// ============================================
-// جاهز الطلب
-// ============================================
-
-window.readyRequest = async function(id) {
-
-    try {
-
-        await update(
-            ref(db, `requests/${id}`),
-            {
-                status: "ready",
-                readyAt: Date.now(),
-                readyBy: currentUid
-            }
-        );
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-        alert("حدث خطأ");
-
-    }
-
-};
-
-
-// ============================================
-// فتح تفاصيل التنفيذ
-// ============================================
-
-window.openDetails = function(id, type) {
-
-    currentRequest = {
-        id: id,
-        type: type
-    };
-
-
-    modal.classList.remove("hidden");
-
-
-    modalTitle.innerText =
-        `تفاصيل تنفيذ ${type}`;
-
-
-    modalSub.innerText =
-        "أدخل المعلومات النهائية للطلب";
-
-
-    problemInput.value = "";
-    priceInput.value = "";
-    signalInput.value = "";
-    towerInput.value = "";
-    sectorInput.value = "";
-
-
-    // الصيانة
-    if (type === "صيانة") {
-
-        problemField.style.display = "block";
-        sectorField.style.display = "none";
-
-    }
-
-    // التركيبة
-    else if (type === "تركيبة") {
-
-        problemField.style.display = "none";
-        sectorField.style.display = "block";
-
-    }
-
-    // القلبة
-    else {
-
-        problemField.style.display = "none";
-        sectorField.style.display = "block";
-
-    }
-
-};
-
-
-// ============================================
-// إغلاق
-// ============================================
-
-cancelDetails.onclick = function() {
-
-    modal.classList.add("hidden");
-
-    currentRequest = null;
-
-};
-
-
-// ============================================
-// حفظ التنفيذ
-// ============================================
-
-saveDetails.onclick = async function() {
-
-    if (!currentRequest) {
-        return;
-    }
-
-
-    const price = Number(priceInput.value || 0);
-
-    const signal = signalInput.value.trim();
-
-    const tower = towerInput.value.trim();
-
-    const sector = sectorInput.value.trim();
-
-    const problem = problemInput.value.trim();
-
-
-    if (price < 0) {
-
-        alert("المبلغ غير صحيح");
-
-        return;
-
-    }
-
-
-    if (!signal) {
-
-        alert("أدخل الإشارة");
-
-        return;
-
-    }
-
-
-    if (!tower) {
-
-        alert("أدخل برج الربط");
-
-        return;
-
-    }
-
-
-    if (
-        currentRequest.type !== "صيانة" &&
-        !sector
-    ) {
-
-        alert("أدخل السكتور");
-
-        return;
-
-    }
-
-
-    try {
-
-        const requestRef =
-            ref(
-                db,
-                `requests/${currentRequest.id}`
-            );
-
-
-        // جلب الطلب الحالي من الـ snapshot
-        const snapshot = await new Promise((resolve) => {
-
-            onValue(
-                requestRef,
-                resolve,
-                {
-                    onlyOnce: true
-                }
-            );
-
-        });
-
-
-        if (!snapshot.exists()) {
-
-            alert("الطلب غير موجود");
-
-            return;
-
-        }
-
-
-        const request = snapshot.val();
-
-
-        // ========================================
-        // إنشاء سجل الصيانة النهائي
-        // ========================================
-
-        const maintenanceRef =
-            push(ref(db, "maintenance"));
-
-
-        const maintenanceData = {
-
-            type: currentRequest.type,
-
-            name: request.name || "",
-
-            national: request.national || "",
-
-            problem:
-                currentRequest.type === "صيانة"
-                ? problem
-                : "",
-
-            location: request.location || "",
-
-            phone: request.phone || "",
-
-            requester: request.requester || "",
-
-            employee:
-                request.assignee ||
-                request.employee ||
-                "",
-
-            uid: request.assigneeUid || "",
-
-            price: price,
-
-            signal: signal,
-
-            tower: tower,
-
-            sector:
-                currentRequest.type === "صيانة"
-                ? ""
-                : sector,
-
-            date:
-                new Date().toLocaleDateString("ar"),
-
-            createdAt: Date.now(),
-
-            requestId: currentRequest.id
-
-        };
-
-
-        await set(
-            maintenanceRef,
-            maintenanceData
-        );
-
-
-        // ========================================
-        // تحديث حالة الطلب
-        // ========================================
-
-        await update(
-            requestRef,
-            {
-                status: "completed",
-
-                completedAt: Date.now(),
-
-                completedBy: currentUid,
-
-                maintenanceId: maintenanceRef.key,
-
-                price: price,
-
-                signal: signal,
-
-                tower: tower,
-
-                sector:
-                    currentRequest.type === "صيانة"
-                    ? ""
-                    : sector,
-
-                finalProblem:
-                    currentRequest.type === "صيانة"
-                    ? problem
-                    : ""
-
-            }
-        );
-
-
-        modal.classList.add("hidden");
-
-        currentRequest = null;
-
-
-        alert(
-            "✅ تم تسجيل تنفيذ الطلب بنجاح"
-        );
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-        alert(
-            "حدث خطأ أثناء حفظ الطلب"
-        );
-
-    }
-
-};
-
-
-// ============================================
-// حماية النصوص
-// ============================================
-
-function escapeHtml(value) {
-
-    return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-
-}
+</html>
