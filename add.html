@@ -3,16 +3,842 @@
 
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
 
-<title>إضافة صيانة - KHLLO NET</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-<link rel="stylesheet" href="style.css">
+    <title>KHLLO NET | إضافة طلب</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <!-- Cairo -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <style>
+
+        /* =====================================
+           RESET
+        ===================================== */
+
+        *{
+            box-sizing:border-box;
+            margin:0;
+            padding:0;
+        }
+
+
+        /* =====================================
+           COLORS
+        ===================================== */
+
+        :root{
+
+            --bg:#04100b;
+
+            --card:#0b2118;
+
+            --card2:#071910;
+
+            --green:#28ed91;
+
+            --dark:#0a9c62;
+
+            --text:#f4fff9;
+
+            --muted:#91afa1;
+
+            --danger:#ff6877;
+
+            --orange:#ffb84d;
+
+            --border:#28ed9125;
+
+        }
+
+
+        /* =====================================
+           BODY
+        ===================================== */
+
+        body{
+
+            min-height:100vh;
+
+            font-family:
+                'Cairo',
+                Arial,
+                sans-serif;
+
+            background:
+
+                radial-gradient(
+                    circle at 15% 10%,
+                    #164d3480,
+                    transparent 30%
+                ),
+
+                radial-gradient(
+                    circle at 90% 90%,
+                    #0b714c55,
+                    transparent 30%
+                ),
+
+                var(--bg);
+
+            color:var(--text);
+
+        }
+
+
+        /* =====================================
+           SIDEBAR
+        ===================================== */
+
+        .sidebar{
+
+            width:260px;
+
+            height:100vh;
+
+            position:fixed;
+
+            top:0;
+
+            right:0;
+
+            background:#0b2118;
+
+            border-left:
+                1px solid
+                rgba(40,237,145,.15);
+
+            box-shadow:
+                0 0 25px #0008;
+
+            z-index:1000;
+
+        }
+
+
+        .side-logo{
+
+            height:90px;
+
+            display:flex;
+
+            align-items:center;
+
+            justify-content:center;
+
+            color:#fff;
+
+            font-size:22px;
+
+            font-weight:800;
+
+            border-bottom:
+                1px solid
+                #ffffff18;
+
+        }
+
+
+        .sidebar ul{
+
+            list-style:none;
+
+            padding:15px 10px;
+
+        }
+
+
+        .sidebar li{
+
+            margin:8px 0;
+
+        }
+
+
+        .sidebar a{
+
+            color:#fff;
+
+            text-decoration:none;
+
+            display:flex;
+
+            align-items:center;
+
+            gap:15px;
+
+            padding:14px 16px;
+
+            border-radius:12px;
+
+            transition:.3s;
+
+            font-size:15px;
+
+            cursor:pointer;
+
+        }
+
+
+        .sidebar a:hover{
+
+            background:#28ed9125;
+
+        }
+
+
+        .sidebar li.active a{
+
+            background:var(--green);
+
+            color:#04100b;
+
+            box-shadow:
+                0 5px 20px
+                #28ed9135;
+
+        }
+
+
+        .sidebar i{
+
+            width:22px;
+
+            text-align:center;
+
+            font-size:18px;
+
+        }
+
+
+        /* =====================================
+           PAGE
+        ===================================== */
+
+        .page{
+
+            width:calc(100% - 260px);
+
+            margin-right:260px;
+
+            padding:30px;
+
+        }
+
+
+        /* =====================================
+           BRAND
+        ===================================== */
+
+        .brand{
+
+            display:flex;
+
+            align-items:center;
+
+            gap:12px;
+
+            margin-bottom:25px;
+
+        }
+
+
+        .logo{
+
+            width:55px;
+
+            height:55px;
+
+            border-radius:17px;
+
+            display:grid;
+
+            place-items:center;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--green),
+                    var(--dark)
+                );
+
+            color:#03140d;
+
+            font-size:29px;
+
+            font-weight:900;
+
+        }
+
+
+        .brand h2{
+
+            font-size:22px;
+
+        }
+
+
+        .brand p{
+
+            font-size:12px;
+
+            color:var(--muted);
+
+            margin-top:3px;
+
+        }
+
+
+        /* =====================================
+           MAIN CARD
+        ===================================== */
+
+        .content-card{
+
+            max-width:950px;
+
+            margin:auto;
+
+            background:#0b2118ee;
+
+            border:
+                1px solid
+                var(--border);
+
+            border-radius:25px;
+
+            padding:28px;
+
+            box-shadow:
+                0 20px 60px
+                #0005;
+
+        }
+
+
+        /* =====================================
+           TITLE
+        ===================================== */
+
+        .title{
+
+            margin-bottom:25px;
+
+        }
+
+
+        .title h1{
+
+            font-size:25px;
+
+        }
+
+
+        .title p{
+
+            color:var(--muted);
+
+            font-size:13px;
+
+            margin-top:5px;
+
+        }
+
+
+        /* =====================================
+           TYPE BUTTONS
+        ===================================== */
+
+        .types{
+
+            display:grid;
+
+            grid-template-columns:
+                repeat(3,1fr);
+
+            gap:15px;
+
+            margin-bottom:25px;
+
+        }
+
+
+        .type-btn{
+
+            border:
+                1px solid
+                var(--border);
+
+            background:#071910;
+
+            color:#fff;
+
+            border-radius:18px;
+
+            padding:20px 15px;
+
+            cursor:pointer;
+
+            font-family:inherit;
+
+            transition:.3s;
+
+            text-align:center;
+
+        }
+
+
+        .type-btn:hover{
+
+            transform:translateY(-3px);
+
+            border-color:
+                #28ed9160;
+
+            box-shadow:
+                0 12px 30px
+                #0006;
+
+        }
+
+
+        .type-btn i{
+
+            display:block;
+
+            font-size:28px;
+
+            color:var(--green);
+
+            margin-bottom:8px;
+
+        }
+
+
+        .type-btn span{
+
+            display:block;
+
+            font-size:15px;
+
+            font-weight:700;
+
+        }
+
+
+        .type-btn small{
+
+            display:block;
+
+            color:var(--muted);
+
+            font-size:11px;
+
+            margin-top:4px;
+
+        }
+
+
+        /* =====================================
+           FORM
+        ===================================== */
+
+        #formArea{
+
+            margin-top:20px;
+
+        }
+
+
+        #formArea h2{
+
+            font-size:20px;
+
+            margin-bottom:22px;
+
+            color:var(--green);
+
+        }
+
+
+        #formArea label{
+
+            display:block;
+
+            color:#d8eee3;
+
+            font-size:13px;
+
+            margin:
+
+                14px 0
+
+                6px;
+
+        }
+
+
+        #formArea input:not([type="checkbox"]),
+
+        #formArea textarea,
+
+        #formArea select{
+
+            width:100%;
+
+            padding:13px 14px;
+
+            border:
+
+                1px solid
+                #28ed9130;
+
+            border-radius:12px;
+
+            background:#0005;
+
+            color:#fff;
+
+            outline:none;
+
+            font-family:inherit;
+
+            font-size:14px;
+
+            transition:.3s;
+
+        }
+
+
+        #formArea input:not([type="checkbox"]):focus,
+
+        #formArea textarea:focus,
+
+        #formArea select:focus{
+
+            border-color:
+                var(--green);
+
+            box-shadow:
+                0 0 0 3px
+                #28ed9110;
+
+        }
+
+
+        #formArea textarea{
+
+            min-height:120px;
+
+            resize:vertical;
+
+        }
+
+
+        #formArea input::placeholder,
+
+        #formArea textarea::placeholder{
+
+            color:#91afa180;
+
+        }
+
+
+        /* =====================================
+           CHECKBOX
+        ===================================== */
+
+        #formArea label:has(
+            input[type="checkbox"]
+        ){
+
+            display:flex;
+
+            align-items:center;
+
+            gap:10px;
+
+            cursor:pointer;
+
+            color:#fff;
+
+            background:#071910;
+
+            border:
+                1px solid
+                var(--border);
+
+            border-radius:12px;
+
+            padding:13px;
+
+        }
+
+
+        #formArea input[type="checkbox"]{
+
+            width:19px;
+
+            height:19px;
+
+            accent-color:
+                var(--green);
+
+            cursor:pointer;
+
+        }
+
+
+        #dishBox{
+
+            margin-top:5px;
+
+            padding:15px;
+
+            background:#071910;
+
+            border-radius:14px;
+
+            border:
+                1px solid
+                var(--border);
+
+        }
+
+
+        /* =====================================
+           SAVE BUTTON
+        ===================================== */
+
+        #formArea button{
+
+            width:100%;
+
+            border:0;
+
+            border-radius:13px;
+
+            padding:14px;
+
+            margin-top:22px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--green),
+                    var(--dark)
+                );
+
+            color:#04100b;
+
+            font-family:inherit;
+
+            font-weight:800;
+
+            font-size:15px;
+
+            cursor:pointer;
+
+            transition:.3s;
+
+        }
+
+
+        #formArea button:hover{
+
+            transform:translateY(-2px);
+
+            box-shadow:
+                0 10px 25px
+                #28ed9135;
+
+        }
+
+
+        /* =====================================
+           EMPTY
+        ===================================== */
+
+        .empty-form{
+
+            text-align:center;
+
+            padding:60px 20px;
+
+            color:var(--muted);
+
+        }
+
+
+        .empty-form i{
+
+            font-size:55px;
+
+            color:#28ed9140;
+
+            margin-bottom:15px;
+
+        }
+
+
+        .empty-form h3{
+
+            color:#fff;
+
+            margin-bottom:5px;
+
+        }
+
+
+        /* =====================================
+           MOBILE
+        ===================================== */
+
+        @media(max-width:900px){
+
+            .types{
+
+                grid-template-columns:
+                    repeat(3,1fr);
+
+            }
+
+        }
+
+
+        @media(max-width:700px){
+
+            .sidebar{
+
+                width:75px;
+
+            }
+
+
+            .side-logo{
+
+                font-size:0;
+
+                height:75px;
+
+            }
+
+
+            .side-logo::after{
+
+                content:"K";
+
+                font-size:26px;
+
+            }
+
+
+            .sidebar a{
+
+                justify-content:center;
+
+                padding:14px 8px;
+
+            }
+
+
+            .sidebar a span{
+
+                display:none;
+
+            }
+
+
+            .sidebar i{
+
+                font-size:20px;
+
+            }
+
+
+            .page{
+
+                width:calc(100% - 75px);
+
+                margin-right:75px;
+
+                padding:15px;
+
+            }
+
+
+            .content-card{
+
+                padding:18px;
+
+                border-radius:20px;
+
+            }
+
+
+            .types{
+
+                grid-template-columns:1fr;
+
+            }
+
+
+            .brand{
+
+                margin-bottom:18px;
+
+            }
+
+
+            .brand h2{
+
+                font-size:19px;
+
+            }
+
+        }
+
+
+        @media(max-width:450px){
+
+            .page{
+
+                padding:10px;
+
+            }
+
+
+            .content-card{
+
+                padding:15px;
+
+            }
+
+
+            .title h1{
+
+                font-size:21px;
+
+            }
+
+        }
+
+    </style>
 
 </head>
 
@@ -20,169 +846,318 @@
 <body>
 
 
-<div class="sidebar">
+    <!-- =====================================
+         SIDEBAR
+    ====================================== -->
 
-<div class="logo">
-<h2>KHLLO NET</h2>
-</div>
+    <aside class="sidebar">
 
+        <div class="side-logo">
+            KHLLO NET
+        </div>
 
-<ul>
 
-<li>
-<a href="index.html">
-<i class="fa-solid fa-house"></i>
-الرئيسية
-</a>
-</li>
+        <ul>
 
+            <li>
 
-<li class="active">
-<a href="add.html">
-<i class="fa-solid fa-plus"></i>
-إضافة صيانة
-</a>
-</li>
+                <a href="index.html">
 
+                    <i class="fa-solid fa-house"></i>
 
-<li>
-<a href="repairs.html">
-<i class="fa-solid fa-screwdriver-wrench"></i>
-الصيانات
-</a>
-</li>
+                    <span>
+                        الرئيسية
+                    </span>
 
-<li>
-<a href="installations.html">
-<i class="fa-solid fa-satellite-dish"></i>
-التركيبات
-</a>
-</li>
+                </a>
 
-<li class="active">
-<a href="transfers.html">
-<i class="fa-solid fa-repeat"></i>
-القلبات
-</a>
-</li>
+            </li>
 
 
-<li>
-<a href="daily.html">
-<i class="fa-solid fa-calendar-days"></i>
-السجل اليومي
-</a>
-</li>
+            <li class="active">
 
+                <a href="add.html">
 
-<li>
-<a href="accounts.html">
-<i class="fa-solid fa-wallet"></i>
-الحسابات
-</a>
-</li>
+                    <i class="fa-solid fa-plus"></i>
 
+                    <span>
+                        إضافة طلب
+                    </span>
 
-<li>
-<a href="users.html">
-<i class="fa-solid fa-users"></i>
-المستخدمون
-</a>
-</li>
+                </a>
 
+            </li>
 
-</ul>
 
-</div>
+            <li>
 
+                <a href="requests.html">
 
+                    <i class="fa-solid fa-inbox"></i>
 
-<div class="main">
+                    <span>
+                        الطلبات
+                    </span>
 
+                </a>
 
-<header>
+            </li>
 
-<h1>
-إضافة طلب جديد
-</h1>
 
-</header>
+            <li>
 
+                <a href="repairs.html">
 
+                    <i class="fa-solid fa-screwdriver-wrench"></i>
 
-<div class="cards">
+                    <span>
+                        الصيانات
+                    </span>
 
+                </a>
 
-<div class="card type-btn" onclick="showForm('maintenance')">
+            </li>
 
-<i class="fa-solid fa-screwdriver-wrench"></i>
 
-<h3>
-صيانة
-</h3>
+            <li>
 
-</div>
+                <a href="daily.html">
 
+                    <i class="fa-solid fa-calendar-days"></i>
 
+                    <span>
+                        السجل اليومي
+                    </span>
 
-<div class="card type-btn" onclick="showForm('install')">
+                </a>
 
-<i class="fa-solid fa-satellite-dish"></i>
+            </li>
 
-<h3>
-تركيبة
-</h3>
 
-</div>
+            <li>
 
+                <a href="accounts.html">
 
+                    <i class="fa-solid fa-wallet"></i>
 
-<div class="card type-btn" onclick="showForm('transfer')">
+                    <span>
+                        الحسابات
+                    </span>
 
-<i class="fa-solid fa-repeat"></i>
+                </a>
 
-<h3>
-قلبة
-</h3>
+            </li>
 
-</div>
 
-<div class="card type-btn" onclick="showForm('maintsoon')">
+            <li>
 
-<i class="fa-solid fa-screwdriver-wrench"></i>
+                <a href="users.html">
 
-<h3>
-تأجيل صيانه
-</h3>
+                    <i class="fa-solid fa-users"></i>
 
-  </div>
+                    <span>
+                        المستخدمون
+                    </span>
 
-</div>
+                </a>
 
+            </li>
 
 
+            <li>
 
+                <a
+                    href="javascript:void(0)"
+                    onclick="logout()"
+                >
 
-<div class="form-box" id="formArea">
+                    <i class="fa-solid fa-right-from-bracket"></i>
 
-<h2>
-اختر نوع الطلب
-</h2>
+                    <span>
+                        تسجيل الخروج
+                    </span>
 
+                </a>
 
-</div>
+            </li>
 
+        </ul>
 
+    </aside>
 
-</div>
 
 
+    <!-- =====================================
+         PAGE
+    ====================================== -->
 
+    <main class="page">
 
 
-<script type="module" src="maintenance.js"></script>
+        <!-- BRAND -->
 
-<script type="module" src="protect.js"></script>
+        <header class="brand">
+
+            <div class="logo">
+                K
+            </div>
+
+
+            <div>
+
+                <h2>
+                    KHLLO NET
+                </h2>
+
+                <p>
+                    إدارة طلبات الصيانة والتركيب والقلبة
+                </p>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- =================================
+             CONTENT
+        ================================== -->
+
+        <section class="content-card">
+
+
+            <div class="title">
+
+                <h1>
+                    إضافة طلب جديد
+                </h1>
+
+                <p>
+                    اختر نوع الطلب الذي تريد إضافته
+                </p>
+
+            </div>
+
+
+
+            <!-- =================================
+                 TYPES
+            ================================== -->
+
+            <div class="types">
+
+
+                <button
+                    type="button"
+                    class="type-btn"
+                    onclick="showForm('maintenance')"
+                >
+
+                    <i class="fa-solid fa-screwdriver-wrench"></i>
+
+                    <span>
+                        صيانة
+                    </span>
+
+                    <small>
+                        طلب إصلاح مشكلة
+                    </small>
+
+                </button>
+
+
+
+                <button
+                    type="button"
+                    class="type-btn"
+                    onclick="showForm('install')"
+                >
+
+                    <i class="fa-solid fa-satellite-dish"></i>
+
+                    <span>
+                        تركيبة
+                    </span>
+
+                    <small>
+                        طلب تركيب جديد
+                    </small>
+
+                </button>
+
+
+
+                <button
+                    type="button"
+                    class="type-btn"
+                    onclick="showForm('transfer')"
+                >
+
+                    <i class="fa-solid fa-right-left"></i>
+
+                    <span>
+                        قلبة
+                    </span>
+
+                    <small>
+                        نقل أو تغيير الخدمة
+                    </small>
+
+                </button>
+
+
+            </div>
+
+
+
+            <!-- =================================
+                 FORM AREA
+            ================================== -->
+
+            <div id="formArea">
+
+                <div class="empty-form">
+
+                    <i class="fa-solid fa-clipboard-list"></i>
+
+                    <h3>
+                        اختر نوع الطلب
+                    </h3>
+
+                    <p>
+                        اختر صيانة أو تركيبة أو قلبة لعرض النموذج
+                    </p>
+
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+    </main>
+
+
+
+    <!-- =====================================
+         SCRIPTS
+    ====================================== -->
+
+    <!-- حماية الصفحة -->
+    <script
+        type="module"
+        src="protect.js"
+    ></script>
+
+
+    <!-- نظام الطلبات -->
+    <script
+        type="module"
+        src="maintenance.js"
+    ></script>
+
+
 </body>
 
 </html>
