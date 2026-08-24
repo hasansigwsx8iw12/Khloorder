@@ -1,1597 +1,1643 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+// ==========================================
+// KHLLO NET
+// requests.js
+// إدارة الطلبات - Realtime Database
+// ==========================================
 
-<head>
+import { db, auth } from "./firebase.js";
 
-    <meta charset="UTF-8">
+import {
+    ref,
+    onValue,
+    update,
+    set
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+import {
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    <title>KHLLO NET | الطلبات</title>
 
+// ==========================================
+// المستخدم الحالي
+// ==========================================
 
-    <!-- Font Awesome -->
+let currentUser = null;
 
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-    >
+let allRequests = {};
 
+let currentFilter = "all";
 
-    <!-- Cairo -->
+let selectedRequestId = null;
 
-    <link
-        href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet"
-    >
 
+// ==========================================
+// تسجيل الدخول
+// ==========================================
 
-    <style>
+onAuthStateChanged(auth, (user) => {
 
-        *{
-            box-sizing:border-box;
-            margin:0;
-            padding:0;
-        }
+    if (!user) {
 
+        console.log(
+            "لا يوجد مستخدم مسجل"
+        );
 
-        :root{
+        return;
 
-            --bg:#04100b;
+    }
 
-            --card:#0b2118;
 
-            --card2:#071910;
+    currentUser = user;
 
-            --green:#28ed91;
+    loadRequests();
 
-            --dark:#0a9c62;
+});
 
-            --text:#f4fff9;
 
-            --muted:#91afa1;
+// ==========================================
+// تحميل الطلبات
+// ==========================================
 
-            --orange:#ffb84d;
+function loadRequests() {
 
-            --blue:#67a4ff;
+    const requestsRef =
+        ref(db, "requests");
 
-            --red:#ff6877;
 
-            --border:#28ed9125;
+    onValue(
+        requestsRef,
+        (snapshot) => {
 
-        }
+            if (snapshot.exists()) {
 
+                allRequests =
+                    snapshot.val();
 
-        body{
+            } else {
 
-            min-height:100vh;
+                allRequests = {};
 
-            font-family:
-                'Cairo',
-                Arial,
-                sans-serif;
+            }
 
-            background:
 
-                radial-gradient(
-                    circle at 15% 10%,
-                    #164d3480,
-                    transparent 30%
-                ),
+            renderRequests();
 
-                radial-gradient(
-                    circle at 90% 90%,
-                    #0b714c55,
-                    transparent 30%
-                ),
+        },
 
-                var(--bg);
+        (error) => {
 
-            color:var(--text);
+            console.error(error);
 
-        }
-
-
-        /* ================= SIDEBAR ================= */
-
-        .sidebar{
-
-            width:260px;
-
-            height:100vh;
-
-            position:fixed;
-
-            top:0;
-
-            right:0;
-
-            background:#0b2118;
-
-            border-left:
-                1px solid
-                rgba(40,237,145,.15);
-
-            box-shadow:
-                0 0 25px #0008;
-
-            z-index:1000;
-
-        }
-
-
-        .side-logo{
-
-            height:90px;
-
-            display:flex;
-
-            align-items:center;
-
-            justify-content:center;
-
-            color:#fff;
-
-            font-size:22px;
-
-            font-weight:800;
-
-            border-bottom:
-                1px solid
-                #ffffff18;
-
-        }
-
-
-        .sidebar ul{
-
-            list-style:none;
-
-            padding:15px 10px;
-
-        }
-
-
-        .sidebar li{
-
-            margin:8px 0;
-
-        }
-
-
-        .sidebar a{
-
-            color:#fff;
-
-            text-decoration:none;
-
-            display:flex;
-
-            align-items:center;
-
-            gap:15px;
-
-            padding:14px 16px;
-
-            border-radius:12px;
-
-            transition:.3s;
-
-            font-size:15px;
-
-            cursor:pointer;
-
-        }
-
-
-        .sidebar a:hover{
-
-            background:#28ed9125;
-
-        }
-
-
-        .sidebar li.active a{
-
-            background:var(--green);
-
-            color:#04100b;
-
-            box-shadow:
-                0 5px 20px
-                #28ed9135;
-
-        }
-
-
-        .sidebar i{
-
-            width:22px;
-
-            text-align:center;
-
-            font-size:18px;
-
-        }
-
-
-        /* ================= PAGE ================= */
-
-        .page{
-
-            width:calc(100% - 260px);
-
-            margin-right:260px;
-
-            padding:30px;
-
-        }
-
-
-        .brand{
-
-            display:flex;
-
-            align-items:center;
-
-            gap:12px;
-
-            margin-bottom:25px;
-
-        }
-
-
-        .logo{
-
-            width:55px;
-
-            height:55px;
-
-            border-radius:17px;
-
-            display:grid;
-
-            place-items:center;
-
-            background:
-                linear-gradient(
-                    135deg,
-                    var(--green),
-                    var(--dark)
+            const grid =
+                document.getElementById(
+                    "requestsGrid"
                 );
 
-            color:#03140d;
+            if (grid) {
 
-            font-size:29px;
+                grid.innerHTML = `
 
-            font-weight:900;
+                    <div class="empty">
 
-        }
+                        <i
+                            class="fa-solid
+                            fa-triangle-exclamation"
+                        ></i>
 
+                        <p>
+                            حدث خطأ في تحميل الطلبات
+                        </p>
 
-        .brand h2{
+                    </div>
 
-            font-size:22px;
-
-        }
-
-
-        .brand p{
-
-            font-size:12px;
-
-            color:var(--muted);
-
-            margin-top:3px;
-
-        }
-
-
-        /* ================= STATS ================= */
-
-        .stats{
-
-            display:grid;
-
-            grid-template-columns:
-                repeat(4,1fr);
-
-            gap:15px;
-
-            margin-bottom:22px;
-
-        }
-
-
-        .stat{
-
-            background:#0b2118ee;
-
-            border:
-                1px solid
-                var(--border);
-
-            border-radius:20px;
-
-            padding:20px;
-
-        }
-
-
-        .stat i{
-
-            color:var(--green);
-
-            font-size:22px;
-
-            margin-bottom:8px;
-
-        }
-
-
-        .stat span{
-
-            display:block;
-
-            color:var(--muted);
-
-            font-size:13px;
-
-        }
-
-
-        .stat strong{
-
-            display:block;
-
-            font-size:28px;
-
-            color:var(--green);
-
-            margin-top:3px;
-
-        }
-
-
-        /* ================= REQUESTS ================= */
-
-        .requests{
-
-            background:#0b2118ee;
-
-            border:
-                1px solid
-                var(--border);
-
-            border-radius:23px;
-
-            padding:25px;
-
-        }
-
-
-        .title{
-
-            margin-bottom:22px;
-
-        }
-
-
-        .title h1{
-
-            font-size:24px;
-
-        }
-
-
-        .title p{
-
-            color:var(--muted);
-
-            font-size:12px;
-
-            margin-top:5px;
-
-        }
-
-
-        /* ================= FILTER ================= */
-
-        .filters{
-
-            display:flex;
-
-            gap:10px;
-
-            flex-wrap:wrap;
-
-            margin-bottom:22px;
-
-        }
-
-
-        .filter-btn{
-
-            border:
-                1px solid
-                var(--border);
-
-            background:#071910;
-
-            color:#fff;
-
-            border-radius:12px;
-
-            padding:10px 15px;
-
-            font-family:inherit;
-
-            cursor:pointer;
-
-            transition:.3s;
-
-        }
-
-
-        .filter-btn:hover{
-
-            border-color:var(--green);
-
-        }
-
-
-        .filter-btn.active{
-
-            background:var(--green);
-
-            color:#04100b;
-
-            font-weight:bold;
-
-        }
-
-
-        /* ================= GRID ================= */
-
-        .requests-grid{
-
-            display:grid;
-
-            grid-template-columns:
-                repeat(
-                    auto-fill,
-                    minmax(330px,1fr)
-                );
-
-            gap:18px;
-
-        }
-
-
-        /* ================= REQUEST BOX ================= */
-
-        .request-box{
-
-            background:#071910;
-
-            border:
-                1px solid
-                var(--border);
-
-            border-radius:20px;
-
-            padding:20px;
-
-            transition:.3s;
-
-        }
-
-
-        .request-box:hover{
-
-            transform:translateY(-3px);
-
-            border-color:#28ed9155;
-
-            box-shadow:
-                0 15px 40px
-                #0006;
-
-        }
-
-
-        .request-head{
-
-            display:flex;
-
-            align-items:center;
-
-            justify-content:space-between;
-
-            gap:10px;
-
-            margin-bottom:15px;
-
-        }
-
-
-        .type{
-
-            display:inline-flex;
-
-            align-items:center;
-
-            gap:7px;
-
-            color:var(--green);
-
-            font-weight:bold;
-
-        }
-
-
-        .status{
-
-            padding:5px 10px;
-
-            border-radius:20px;
-
-            font-size:11px;
-
-            background:#ffb84d18;
-
-            color:var(--orange);
-
-            white-space:nowrap;
-
-        }
-
-
-        .status.received{
-
-            background:#28ed9118;
-
-            color:var(--green);
-
-        }
-
-
-        .status.ready{
-
-            background:#438cff18;
-
-            color:var(--blue);
-
-        }
-
-
-        /* ================= INFO ================= */
-
-        .info{
-
-            display:grid;
-
-            gap:9px;
-
-            margin-bottom:18px;
-
-        }
-
-
-        .info div{
-
-            display:flex;
-
-            justify-content:space-between;
-
-            gap:10px;
-
-            font-size:13px;
-
-            border-bottom:
-                1px solid
-                #ffffff08;
-
-            padding-bottom:7px;
-
-        }
-
-
-        .info span{
-
-            color:var(--muted);
-
-        }
-
-
-        .info strong{
-
-            color:#fff;
-
-            text-align:left;
-
-            max-width:60%;
-
-            overflow-wrap:anywhere;
-
-        }
-
-
-        /* ================= PROBLEM ================= */
-
-        .problem{
-
-            background:#ffffff05;
-
-            border-radius:12px;
-
-            padding:12px;
-
-            margin-bottom:15px;
-
-        }
-
-
-        .problem span{
-
-            display:block;
-
-            color:var(--muted);
-
-            font-size:11px;
-
-            margin-bottom:4px;
-
-        }
-
-
-        .problem p{
-
-            font-size:13px;
-
-            line-height:1.8;
-
-        }
-
-
-        /* ================= BUTTONS ================= */
-
-        .request-actions{
-
-            display:flex;
-
-            flex-direction:column;
-
-            gap:8px;
-
-        }
-
-
-        .request-actions button{
-
-            width:100%;
-
-            border:0;
-
-            border-radius:12px;
-
-            padding:12px;
-
-            font-family:inherit;
-
-            font-weight:bold;
-
-            cursor:pointer;
-
-            transition:.3s;
-
-        }
-
-
-        .request-actions button:hover{
-
-            transform:translateY(-2px);
-
-        }
-
-
-        .receive-btn{
-
-            background:var(--green);
-
-            color:#04100b;
-
-        }
-
-
-        .ready-btn{
-
-            background:var(--blue);
-
-            color:#07101f;
-
-        }
-
-
-        .details-btn{
-
-            background:#162d24;
-
-            color:#fff;
-
-        }
-
-
-        .request-actions button:disabled{
-
-            opacity:.5;
-
-            cursor:not-allowed;
-
-            transform:none;
-
-        }
-
-
-        /* ================= EMPTY ================= */
-
-        .empty{
-
-            grid-column:1/-1;
-
-            text-align:center;
-
-            padding:60px 20px;
-
-            color:var(--muted);
-
-        }
-
-
-        .empty i{
-
-            font-size:50px;
-
-            color:#28ed9140;
-
-            margin-bottom:15px;
-
-        }
-
-
-        .empty p{
-
-            font-size:14px;
-
-        }
-
-
-        /* ================= LOADING ================= */
-
-        .loading{
-
-            grid-column:1/-1;
-
-            text-align:center;
-
-            padding:50px;
-
-            color:var(--muted);
-
-        }
-
-
-        .loading i{
-
-            font-size:35px;
-
-            color:var(--green);
-
-            margin-bottom:12px;
-
-        }
-
-
-        /* ================= MODAL ================= */
-
-        .modal{
-
-            position:fixed;
-
-            inset:0;
-
-            background:#000b;
-
-            display:flex;
-
-            align-items:center;
-
-            justify-content:center;
-
-            padding:20px;
-
-            z-index:2000;
-
-        }
-
-
-        .modal.hidden{
-
-            display:none;
-
-        }
-
-
-        .modal-box{
-
-            width:min(550px,100%);
-
-            max-height:90vh;
-
-            overflow:auto;
-
-            background:#0b2118;
-
-            border:
-                1px solid
-                #28ed9140;
-
-            border-radius:23px;
-
-            padding:25px;
-
-            box-shadow:
-                0 25px 80px
-                #000;
-
-        }
-
-
-        .modal-box h2{
-
-            margin-bottom:5px;
-
-        }
-
-
-        .modal-sub{
-
-            color:var(--muted);
-
-            font-size:12px;
-
-            margin-bottom:20px;
-
-        }
-
-
-        .field{
-
-            margin-bottom:13px;
-
-        }
-
-
-        .field label{
-
-            display:block;
-
-            color:var(--muted);
-
-            font-size:12px;
-
-            margin-bottom:6px;
-
-        }
-
-
-        .field input,
-
-        .field textarea,
-
-        .field select{
-
-            width:100%;
-
-            padding:12px;
-
-            border:
-                1px solid
-                #28ed9130;
-
-            border-radius:12px;
-
-            background:#0005;
-
-            color:#fff;
-
-            outline:none;
-
-            font-family:inherit;
-
-        }
-
-
-        .field textarea{
-
-            min-height:90px;
-
-            resize:vertical;
-
-        }
-
-
-        .field input:focus,
-
-        .field textarea:focus,
-
-        .field select:focus{
-
-            border-color:var(--green);
-
-        }
-
-
-        .modal-actions{
-
-            display:flex;
-
-            gap:10px;
-
-            margin-top:20px;
-
-        }
-
-
-        .modal-actions button{
-
-            flex:1;
-
-            border:0;
-
-            border-radius:12px;
-
-            padding:12px;
-
-            font-family:inherit;
-
-            font-weight:bold;
-
-            cursor:pointer;
-
-        }
-
-
-        .cancel-btn{
-
-            background:#162d24;
-
-            color:#fff;
-
-        }
-
-
-        .save-btn{
-
-            background:var(--green);
-
-            color:#04100b;
-
-        }
-
-
-        /* ================= MOBILE ================= */
-
-        @media(max-width:900px){
-
-            .stats{
-
-                grid-template-columns:
-                    repeat(2,1fr);
+                `;
 
             }
 
         }
+    );
 
+}
 
-        @media(max-width:700px){
 
-            .sidebar{
+// ==========================================
+// رسم الطلبات
+// ==========================================
 
-                width:75px;
+function renderRequests() {
 
-            }
+    const grid =
+        document.getElementById(
+            "requestsGrid"
+        );
 
 
-            .side-logo{
+    if (!grid) return;
 
-                font-size:0;
 
-                height:75px;
+    const requests =
+        Object.values(allRequests || {})
+            .sort(
+                (a, b) =>
+                    (b.createdAt || 0) -
+                    (a.createdAt || 0)
+            );
 
-            }
 
+    updateStats(requests);
 
-            .side-logo::after{
 
-                content:"K";
+    let filtered =
+        requests;
 
-                font-size:26px;
 
-            }
+    if (currentFilter !== "all") {
 
+        filtered =
+            requests.filter(
+                request =>
+                    request.status ===
+                    currentFilter
+            );
 
-            .sidebar a{
+    }
 
-                justify-content:center;
 
-                padding:14px 8px;
+    if (!filtered.length) {
 
-            }
+        grid.innerHTML = `
 
+            <div class="empty">
 
-            .sidebar a span{
-
-                display:none;
-
-            }
-
-
-            .sidebar i{
-
-                font-size:20px;
-
-            }
-
-
-            .page{
-
-                width:calc(100% - 75px);
-
-                margin-right:75px;
-
-                padding:15px;
-
-            }
-
-
-            .requests{
-
-                padding:17px;
-
-            }
-
-
-            .requests-grid{
-
-                grid-template-columns:1fr;
-
-            }
-
-
-            .request-head{
-
-                align-items:flex-start;
-
-            }
-
-        }
-
-
-        @media(max-width:500px){
-
-            .stats{
-
-                grid-template-columns:
-                    1fr 1fr;
-
-            }
-
-
-            .stat{
-
-                padding:15px;
-
-            }
-
-
-            .stat strong{
-
-                font-size:23px;
-
-            }
-
-
-            .modal-box{
-
-                padding:18px;
-
-            }
-
-
-            .modal-actions{
-
-                flex-direction:column;
-
-            }
-
-        }
-
-    </style>
-
-</head>
-
-
-<body>
-
-
-    <!-- ================= SIDEBAR ================= -->
-
-    <aside class="sidebar">
-
-        <div class="side-logo">
-            KHLLO NET
-        </div>
-
-
-        <ul>
-
-            <li>
-
-                <a href="index.html">
-
-                    <i class="fa-solid fa-house"></i>
-
-                    <span>الرئيسية</span>
-
-                </a>
-
-            </li>
-
-
-            <li>
-
-                <a href="add.html">
-
-                    <i class="fa-solid fa-plus"></i>
-
-                    <span>إضافة طلب</span>
-
-                </a>
-
-            </li>
-
-
-            <li class="active">
-
-                <a href="requests.html">
-
-                    <i class="fa-solid fa-inbox"></i>
-
-                    <span>الطلبات</span>
-
-                </a>
-
-            </li>
-
-
-            <li>
-
-                <a href="repairs.html">
-
-                    <i class="fa-solid fa-screwdriver-wrench"></i>
-
-                    <span>الصيانات</span>
-
-                </a>
-
-            </li>
-
-
-            <li>
-
-                <a href="daily.html">
-
-                    <i class="fa-solid fa-calendar-days"></i>
-
-                    <span>السجل اليومي</span>
-
-                </a>
-
-            </li>
-
-
-            <li>
-
-                <a href="accounts.html">
-
-                    <i class="fa-solid fa-wallet"></i>
-
-                    <span>الحسابات</span>
-
-                </a>
-
-            </li>
-
-
-            <li>
-
-                <a href="users.html">
-
-                    <i class="fa-solid fa-users"></i>
-
-                    <span>المستخدمون</span>
-
-                </a>
-
-            </li>
-
-
-            <li>
-
-                <a
-                    href="javascript:void(0)"
-                    onclick="logout()"
-                >
-
-                    <i class="fa-solid fa-right-from-bracket"></i>
-
-                    <span>تسجيل الخروج</span>
-
-                </a>
-
-            </li>
-
-        </ul>
-
-    </aside>
-
-
-
-    <!-- ================= PAGE ================= -->
-
-    <main class="page">
-
-
-        <!-- BRAND -->
-
-        <header class="brand">
-
-            <div class="logo">
-                K
-            </div>
-
-
-            <div>
-
-                <h2>
-                    KHLLO NET
-                </h2>
+                <i
+                    class="fa-solid fa-inbox"
+                ></i>
 
                 <p>
-                    إدارة الطلبات ومتابعة تنفيذها
+                    لا توجد طلبات هنا
                 </p>
 
             </div>
 
-        </header>
+        `;
+
+        return;
+
+    }
 
 
-
-        <!-- ================= STATS ================= -->
-
-        <section class="stats">
-
-
-            <div class="stat">
-
-                <i class="fa-solid fa-inbox"></i>
-
-                <span>
-                    كل الطلبات
-                </span>
-
-                <strong id="totalRequests">
-                    0
-                </strong>
-
-            </div>
+    grid.innerHTML =
+        filtered
+            .map(
+                request =>
+                    createRequestBox(
+                        request
+                    )
+            )
+            .join("");
 
 
-            <div class="stat">
+    attachButtons();
 
-                <i class="fa-solid fa-clock"></i>
-
-                <span>
-                    طلبات جديدة
-                </span>
-
-                <strong id="newRequests">
-                    0
-                </strong>
-
-            </div>
+}
 
 
-            <div class="stat">
+// ==========================================
+// الإحصائيات
+// ==========================================
 
-                <i class="fa-solid fa-hand"></i>
+function updateStats(requests) {
 
-                <span>
-                    تم الاستلام
-                </span>
-
-                <strong id="receivedRequests">
-                    0
-                </strong>
-
-            </div>
+    const total =
+        requests.length;
 
 
-            <div class="stat">
-
-                <i class="fa-solid fa-check"></i>
-
-                <span>
-                    جاهزة
-                </span>
-
-                <strong id="readyRequests">
-                    0
-                </strong>
-
-            </div>
+    const newCount =
+        requests.filter(
+            r => r.status === "new"
+        ).length;
 
 
-        </section>
+    const receivedCount =
+        requests.filter(
+            r => r.status === "received"
+        ).length;
 
 
-
-        <!-- ================= REQUESTS ================= -->
-
-        <section class="requests">
-
-
-            <div class="title">
-
-                <h1>
-                    الطلبات
-                </h1>
-
-                <p>
-                    جميع الطلبات الواردة إلى KHLLO NET
-                </p>
-
-            </div>
+    const readyCount =
+        requests.filter(
+            r => r.status === "ready"
+        ).length;
 
 
+    setText(
+        "totalRequests",
+        total
+    );
 
-            <!-- FILTERS -->
+    setText(
+        "newRequests",
+        newCount
+    );
 
-            <div class="filters">
+    setText(
+        "receivedRequests",
+        receivedCount
+    );
 
-                <button
-                    class="filter-btn active"
-                    data-filter="all"
-                >
-                    الكل
-                </button>
+    setText(
+        "readyRequests",
+        readyCount
+    );
 
-
-                <button
-                    class="filter-btn"
-                    data-filter="new"
-                >
-                    🆕 جديدة
-                </button>
-
-
-                <button
-                    class="filter-btn"
-                    data-filter="received"
-                >
-                    📥 مستلمة
-                </button>
+}
 
 
-                <button
-                    class="filter-btn"
-                    data-filter="ready"
-                >
-                    ✅ جاهزة
-                </button>
+// ==========================================
+// تغيير النص
+// ==========================================
 
-            </div>
+function setText(id, value) {
+
+    const element =
+        document.getElementById(id);
+
+    if (element) {
+
+        element.textContent =
+            value;
+
+    }
+
+}
 
 
+// ==========================================
+// نوع الطلب
+// ==========================================
 
-            <!-- REQUESTS GRID -->
+function getTypeInfo(type) {
 
-            <div
-                id="requestsGrid"
-                class="requests-grid"
-            >
+    if (type === "maintenance") {
 
-                <div class="loading">
+        return {
+
+            title: "صيانة",
+
+            icon:
+                "fa-screwdriver-wrench"
+
+        };
+
+    }
+
+
+    if (type === "install") {
+
+        return {
+
+            title: "تركيبة",
+
+            icon:
+                "fa-satellite-dish"
+
+        };
+
+    }
+
+
+    if (type === "transfer") {
+
+        return {
+
+            title: "قلبة",
+
+            icon:
+                "fa-right-left"
+
+        };
+
+    }
+
+
+    return {
+
+        title: "طلب",
+
+        icon:
+            "fa-file"
+
+    };
+
+}
+
+
+// ==========================================
+// حالة الطلب
+// ==========================================
+
+function getStatusInfo(status) {
+
+    if (status === "received") {
+
+        return {
+
+            text: "تم استلام الطلب",
+
+            className: "received"
+
+        };
+
+    }
+
+
+    if (status === "ready") {
+
+        return {
+
+            text: "جاهز الطلب",
+
+            className: "ready"
+
+        };
+
+    }
+
+
+    return {
+
+        text: "طلب جديد",
+
+        className: ""
+
+    };
+
+}
+
+
+// ==========================================
+// إنشاء Box
+// ==========================================
+
+function createRequestBox(request) {
+
+    const type =
+        getTypeInfo(
+            request.type
+        );
+
+
+    const status =
+        getStatusInfo(
+            request.status
+        );
+
+
+    let html = `
+
+        <div
+            class="request-box"
+            data-id="${request.id}"
+        >
+
+            <div class="request-head">
+
+                <div class="type">
 
                     <i
-                        class="fa-solid fa-spinner fa-spin"
+                        class="fa-solid
+                        ${type.icon}"
                     ></i>
 
-                    <p>
-                        جاري تحميل الطلبات...
-                    </p>
+                    ${type.title}
 
+                </div>
+
+
+                <div
+                    class="status
+                    ${status.className}"
+                >
+                    ${status.text}
                 </div>
 
             </div>
 
 
-        </section>
+            <div class="info">
+
+                <div>
+
+                    <span>
+                        الزبون
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            request.name
+                        )}
+                    </strong>
+
+                </div>
 
 
-    </main>
+                <div>
+
+                    <span>
+                        الرقم الوطني
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            request.national
+                        )}
+                    </strong>
+
+                </div>
 
 
+                <div>
 
-    <!-- ================= DETAILS MODAL ================= -->
+                    <span>
+                        الموقع
+                    </span>
 
-    <div
-        id="detailsModal"
-        class="modal hidden"
-    >
+                    <strong>
+                        ${escapeHtml(
+                            request.location
+                        )}
+                    </strong>
 
-        <div class="modal-box">
-
-
-            <h2 id="modalTitle">
-                تفاصيل التنفيذ
-            </h2>
-
-
-            <p
-                id="modalSub"
-                class="modal-sub"
-            >
-                أدخل معلومات تنفيذ الطلب
-            </p>
+                </div>
 
 
-            <!-- مشكلة الصيانة -->
+                <div>
 
-            <div
-                class="field"
-                id="problemField"
-            >
+                    <span>
+                        الهاتف
+                    </span>
 
-                <label>
+                    <strong>
+                        ${escapeHtml(
+                            request.phone
+                        )}
+                    </strong>
+
+                </div>
+
+    `;
+
+
+    // نوع التركيبة
+
+    if (
+        request.type === "install" &&
+        request.installType
+    ) {
+
+        html += `
+
+                <div>
+
+                    <span>
+                        نوع التركيبة
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            request.installType
+                        )}
+                    </strong>
+
+                </div>
+
+        `;
+
+    }
+
+
+    // المبلغ الأصلي
+
+    if (
+        request.price !== undefined &&
+        request.price !== null
+    ) {
+
+        html += `
+
+                <div>
+
+                    <span>
+                        المبلغ
+                    </span>
+
+                    <strong>
+                        ${formatNumber(
+                            request.price
+                        )}
+                    </strong>
+
+                </div>
+
+        `;
+
+    }
+
+
+    // مقدم الطلب
+
+    html += `
+
+                <div>
+
+                    <span>
+                        مقدم الطلب
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            request.employee ||
+                            request.createdBy?.name ||
+                            "غير معروف"
+                        )}
+                    </strong>
+
+                </div>
+
+    `;
+
+
+    // المكلف
+
+    if (
+        request.receivedBy?.name
+    ) {
+
+        html += `
+
+                <div>
+
+                    <span>
+                        المكلف
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            request.receivedBy.name
+                        )}
+                    </strong>
+
+                </div>
+
+        `;
+
+    }
+
+
+    html += `
+            </div>
+    `;
+
+
+    // مشكلة الصيانة
+
+    if (
+        request.type === "maintenance" &&
+        request.problem
+    ) {
+
+        html += `
+
+            <div class="problem">
+
+                <span>
                     مشكلة الزبون
-                </label>
+                </span>
 
-                <textarea
-                    id="problemInput"
-                    placeholder="اكتب مشكلة الزبون..."
-                ></textarea>
-
-            </div>
-
-
-            <!-- المبلغ -->
-
-            <div class="field">
-
-                <label>
-                    المبلغ الذي تم أخذه من الزبون
-                </label>
-
-                <input
-                    id="priceInput"
-                    type="number"
-                    min="0"
-                    placeholder="مثلاً 50000"
-                >
+                <p>
+                    ${escapeHtml(
+                        request.problem
+                    )}
+                </p>
 
             </div>
 
+        `;
 
-            <!-- الإشارة -->
-
-            <div class="field">
-
-                <label>
-                    الإشارة
-                </label>
-
-                <input
-                    id="signalInput"
-                    placeholder="مثلاً 80%"
-                >
-
-            </div>
+    }
 
 
-            <!-- برج الربط -->
+    // ======================================
+    // الأزرار
+    // ======================================
 
-            <div class="field">
+    html += `
 
-                <label>
-                    برج الربط
-                </label>
+            <div class="request-actions">
 
-                <input
-                    id="towerInput"
-                    placeholder="اسم برج الربط"
-                >
-
-            </div>
+    `;
 
 
-            <!-- السكتور -->
+    // طلب جديد
 
-            <div
-                class="field"
-                id="sectorField"
+    if (
+        request.status === "new"
+    ) {
+
+        html += `
+
+            <button
+                class="receive-btn"
+                data-action="receive"
+                data-id="${request.id}"
             >
 
-                <label>
-                    السكتور
-                </label>
+                <i
+                    class="fa-solid fa-hand"
+                ></i>
 
-                <input
-                    id="sectorInput"
-                    placeholder="اسم السكتور"
-                >
+                تم استلام الطلب
+
+            </button>
+
+        `;
+
+    }
+
+
+    // تم الاستلام
+
+    if (
+        request.status === "received"
+    ) {
+
+        html += `
+
+            <button
+                class="ready-btn"
+                data-action="ready"
+                data-id="${request.id}"
+            >
+
+                <i
+                    class="fa-solid fa-check"
+                ></i>
+
+                جاهز الطلب
+
+            </button>
+
+        `;
+
+    }
+
+
+    // جاهز
+
+    if (
+        request.status === "ready"
+    ) {
+
+        html += `
+
+            <button
+                class="details-btn"
+                data-action="details"
+                data-id="${request.id}"
+            >
+
+                <i
+                    class="fa-solid fa-eye"
+                ></i>
+
+                عرض التفاصيل
+
+            </button>
+
+        `;
+
+    }
+
+
+    html += `
 
             </div>
-
-
-            <!-- ACTIONS -->
-
-            <div class="modal-actions">
-
-                <button
-                    id="cancelDetails"
-                    class="cancel-btn"
-                    type="button"
-                >
-                    إلغاء
-                </button>
-
-
-                <button
-                    id="saveDetails"
-                    class="save-btn"
-                    type="button"
-                >
-                    حفظ وإنهاء الطلب
-                </button>
-
-            </div>
-
 
         </div>
 
-    </div>
+    `;
 
 
+    return html;
 
-    <!-- ================= SCRIPTS ================= -->
-
-    <script
-        type="module"
-        src="protect.js"
-    ></script>
+}
 
 
-    <script
-        type="module"
-        src="requests.js"
-    ></script>
+// ==========================================
+// ربط الأزرار
+// ==========================================
+
+function attachButtons() {
+
+    document
+        .querySelectorAll(
+            "[data-action]"
+        )
+        .forEach(button => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    const action =
+                        button.dataset.action;
+
+                    const id =
+                        button.dataset.id;
 
 
-</body>
+                    if (
+                        action === "receive"
+                    ) {
 
-</html>
+                        receiveRequest(id);
+
+                    }
+
+
+                    if (
+                        action === "ready"
+                    ) {
+
+                        openDetails(id);
+
+                    }
+
+
+                    if (
+                        action === "details"
+                    ) {
+
+                        showCompletedDetails(id);
+
+                    }
+
+                }
+            );
+
+        });
+
+}
+
+
+// ==========================================
+// استلام الطلب
+// ==========================================
+
+async function receiveRequest(id) {
+
+    if (!currentUser) {
+
+        alert(
+            "يجب تسجيل الدخول أولاً"
+        );
+
+        return;
+
+    }
+
+
+    const request =
+        allRequests[id];
+
+
+    if (!request) {
+
+        alert(
+            "الطلب غير موجود"
+        );
+
+        return;
+
+    }
+
+
+    if (
+        request.status !== "new"
+    ) {
+
+        return;
+
+    }
+
+
+    const employee = {
+
+        uid:
+            currentUser.uid,
+
+        email:
+            currentUser.email || "",
+
+        name:
+            localStorage.getItem(
+                "employeeName"
+            ) || "غير معروف"
+
+    };
+
+
+    try {
+
+        await update(
+
+            ref(
+                db,
+                `requests/${id}`
+            ),
+
+            {
+
+                status: "received",
+
+                receivedAt:
+                    Date.now(),
+
+                receivedBy:
+                    employee
+
+            }
+
+        );
+
+
+        console.log(
+            "تم استلام الطلب:",
+            id
+        );
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "حدث خطأ أثناء استلام الطلب:\n" +
+            error.message
+        );
+
+    }
+
+}
+
+
+// ==========================================
+// فتح نافذة التنفيذ
+// ==========================================
+
+function openDetails(id) {
+
+    const request =
+        allRequests[id];
+
+
+    if (!request) return;
+
+
+    selectedRequestId =
+        id;
+
+
+    const modal =
+        document.getElementById(
+            "detailsModal"
+        );
+
+
+    const title =
+        document.getElementById(
+            "modalTitle"
+        );
+
+
+    const sub =
+        document.getElementById(
+            "modalSub"
+        );
+
+
+    const problemField =
+        document.getElementById(
+            "problemField"
+        );
+
+
+    const sectorField =
+        document.getElementById(
+            "sectorField"
+        );
+
+
+    // عنوان
+
+    if (request.type === "maintenance") {
+
+        title.textContent =
+            "🛠 إنهاء طلب الصيانة";
+
+        problemField.style.display =
+            "block";
+
+        sectorField.style.display =
+            "none";
+
+    }
+
+
+    else if (
+        request.type === "install"
+    ) {
+
+        title.textContent =
+            "📡 إنهاء طلب التركيبة";
+
+        problemField.style.display =
+            "none";
+
+        sectorField.style.display =
+            "block";
+
+    }
+
+
+    else {
+
+        title.textContent =
+            "🔄 إنهاء طلب القلبة";
+
+        problemField.style.display =
+            "none";
+
+        sectorField.style.display =
+            "block";
+
+    }
+
+
+    sub.textContent =
+        `الزبون: ${request.name}`;
+
+
+    // تعبئة المشكلة
+
+    document.getElementById(
+        "problemInput"
+    ).value =
+        request.problem || "";
+
+
+    // المبلغ
+
+    document.getElementById(
+        "priceInput"
+    ).value =
+        request.price || "";
+
+
+    // تنظيف الحقول
+
+    document.getElementById(
+        "signalInput"
+    ).value = "";
+
+
+    document.getElementById(
+        "towerInput"
+    ).value = "";
+
+
+    document.getElementById(
+        "sectorInput"
+    ).value = "";
+
+
+    modal.classList.remove(
+        "hidden"
+    );
+
+}
+
+
+// ==========================================
+// إغلاق Modal
+// ==========================================
+
+document
+    .getElementById(
+        "cancelDetails"
+    )
+    ?.addEventListener(
+        "click",
+        closeModal
+    );
+
+
+function closeModal() {
+
+    selectedRequestId =
+        null;
+
+
+    document
+        .getElementById(
+            "detailsModal"
+        )
+        ?.classList.add(
+            "hidden"
+        );
+
+}
+
+
+// ==========================================
+// حفظ وإنهاء الطلب
+// ==========================================
+
+document
+    .getElementById(
+        "saveDetails"
+    )
+    ?.addEventListener(
+        "click",
+        finishRequest
+    );
+
+
+async function finishRequest() {
+
+    if (!selectedRequestId) {
+
+        return;
+
+    }
+
+
+    if (!currentUser) {
+
+        alert(
+            "يجب تسجيل الدخول أولاً"
+        );
+
+        return;
+
+    }
+
+
+    const request =
+        allRequests[
+            selectedRequestId
+        ];
+
+
+    if (!request) {
+
+        alert(
+            "الطلب غير موجود"
+        );
+
+        return;
+
+    }
+
+
+    // ======================================
+    // الحقول
+    // ======================================
+
+    const problem =
+        document
+            .getElementById(
+                "problemInput"
+            )
+            .value
+            .trim();
+
+
+    const price =
+        Number(
+            document
+                .getElementById(
+                    "priceInput"
+                )
+                .value
+        ) || 0;
+
+
+    const signal =
+        document
+            .getElementById(
+                "signalInput"
+            )
+            .value
+            .trim();
+
+
+    const tower =
+        document
+            .getElementById(
+                "towerInput"
+            )
+            .value
+            .trim();
+
+
+    const sector =
+        document
+            .getElementById(
+                "sectorInput"
+            )
+            .value
+            .trim();
+
+
+    // ======================================
+    // التحقق
+    // ======================================
+
+    if (
+        request.type === "maintenance" &&
+        !problem
+    ) {
+
+        alert(
+            "يرجى إدخال مشكلة الزبون"
+        );
+
+        return;
+
+    }
+
+
+    if (!price) {
+
+        alert(
+            "يرجى إدخال المبلغ"
+        );
+
+        return;
+
+    }
+
+
+    if (!signal) {
+
+        alert(
+            "يرجى إدخال الإشارة"
+        );
+
+        return;
+
+    }
+
+
+    if (!tower) {
+
+        alert(
+            "يرجى إدخال برج الربط"
+        );
+
+        return;
+
+    }
+
+
+    if (
+        (
+            request.type === "install" ||
+            request.type === "transfer"
+        ) &&
+        !sector
+    ) {
+
+        alert(
+            "يرجى إدخال السكتور"
+        );
+
+        return;
+
+    }
+
+
+    const employee = {
+
+        uid:
+            currentUser.uid,
+
+        email:
+            currentUser.email || "",
+
+        name:
+            localStorage.getItem(
+                "employeeName"
+            ) || "غير معروف"
+
+    };
+
+
+    // ======================================
+    // بيانات التنفيذ
+    // ======================================
+
+    const execution = {
+
+        problem:
+            request.type === "maintenance"
+                ? problem
+                : "",
+
+        price,
+
+        signal,
+
+        tower,
+
+        sector:
+            request.type === "maintenance"
+                ? ""
+                : sector,
+
+        completedBy:
+            employee,
+
+        completedAt:
+            Date.now()
+
+    };
+
+
+    try {
+
+        // ==================================
+        // أولًا:
+        // إضافة السجل للنظام القديم
+        // Realtime Database → maintenance
+        // ==================================
+
+        const maintenanceRef =
+            push(
+                ref(
+                    db,
+                    "maintenance"
+                )
+            );
+
+
+        const maintenanceData = {
+
+            id:
+                maintenanceRef.key,
+
+            type:
+                request.type,
+
+            name:
+                request.name || "",
+
+            national:
+                request.national || "",
+
+            location:
+                request.location || "",
+
+            phone:
+                request.phone || "",
+
+            problem:
+                request.type === "maintenance"
+                    ? problem
+                    : "",
+
+            installType:
+                request.installType || "",
+
+            price,
+
+            signal,
+
+            tower,
+
+            sector:
+                request.type === "maintenance"
+                    ? ""
+                    : sector,
+
+            transfer:
+                request.transfer || "",
+
+            dish:
+                request.dish || false,
+
+            dishSignal:
+                request.dishSignal || "",
+
+            // مقدم الطلب
+            employee:
+                request.employee || "",
+
+            uid:
+                request.uid || "",
+
+            email:
+                request.email || "",
+
+            // المكلف / المنفذ
+            completedBy:
+                employee.name,
+
+            completedByUid:
+                employee.uid,
+
+            completedByEmail:
+                employee.email,
+
+            date:
+                new Date()
+                    .toLocaleDateString(
+                        "ar"
+                    ),
+
+            createdAt:
+                request.createdAt ||
+                Date.now(),
+
+            completedAt:
+                Date.now(),
+
+            requestId:
+                selectedRequestId
+
+        };
+
+
+        await set(
+
+            maintenanceRef,
+
+            maintenanceData
+
+        );
+
+
+        // ==================================
+        // ثانيًا:
+        // تحديث الطلب
+        // ==================================
+
+        await update(
+
+            ref(
+                db,
+                `requests/${selectedRequestId}`
+            ),
+
+            {
+
+                status: "ready",
+
+                readyAt:
+                    Date.now(),
+
+                readyBy:
+                    employee,
+
+                execution:
+
+                    execution,
+
+                maintenanceId:
+                    maintenanceRef.key
+
+            }
+
+        );
+
+
+        console.log(
+            "تم إنهاء الطلب:",
+            selectedRequestId
+        );
+
+
+        alert(
+            "✅ تم إنهاء الطلب وحفظه ضمن الصيانات"
+        );
+
+
+        closeModal();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "حدث خطأ أثناء إنهاء الطلب:\n" +
+            error.message
+        );
+
+    }
+
+}
+
+
+// ==========================================
+// عرض تفاصيل طلب جاهز
+// ==========================================
+
+function showCompletedDetails(id) {
+
+    const request =
+        allRequests[id];
+
+
+    if (!request) return;
+
+
+    const execution =
+        request.execution;
+
+
+    if (!execution) {
+
+        alert(
+            "لا توجد تفاصيل تنفيذ لهذا الطلب"
+        );
+
+        return;
+
+    }
+
+
+    let message =
+
+        `الزبون: ${request.name}\n` +
+
+        `النوع: ${getTypeInfo(
+            request.type
+        ).title}\n` +
+
+        `المبلغ: ${execution.price}\n` +
+
+        `الإشارة: ${execution.signal}\n` +
+
+        `برج الربط: ${execution.tower}`;
+
+
+    if (
+        execution.sector
+    ) {
+
+        message +=
+            `\nالسكتور: ${execution.sector}`;
+
+    }
+
+
+    if (
+        execution.problem
+    ) {
+
+        message +=
+            `\nالمشكلة: ${execution.problem}`;
+
+    }
+
+
+    message +=
+
+        `\nالمكلف: ${
+            execution.completedBy?.name
+            || "غير معروف"
+        }`;
+
+
+    alert(message);
+
+}
+
+
+// ==========================================
+// الفلاتر
+// ==========================================
+
+document
+    .querySelectorAll(
+        ".filter-btn"
+    )
+    .forEach(button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                document
+                    .querySelectorAll(
+                        ".filter-btn"
+                    )
+                    .forEach(btn => {
+
+                        btn.classList.remove(
+                            "active"
+                        );
+
+                    });
+
+
+                button.classList.add(
+                    "active"
+                );
+
+
+                currentFilter =
+                    button.dataset.filter;
+
+
+                renderRequests();
+
+            }
+        );
+
+    });
+
+
+// ==========================================
+// حماية النص من HTML
+// ==========================================
+
+function escapeHtml(value) {
+
+    if (
+        value === undefined ||
+        value === null
+    ) {
+
+        return "";
+
+    }
+
+
+    return String(value)
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+// ==========================================
+// تنسيق الأرقام
+// ==========================================
+
+function formatNumber(value) {
+
+    const number =
+        Number(value);
+
+
+    if (
+        Number.isNaN(number)
+    ) {
+
+        return value;
+
+    }
+
+
+    return number.toLocaleString(
+        "ar-SY"
+    );
+
+}
