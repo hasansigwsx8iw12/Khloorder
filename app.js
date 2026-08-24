@@ -13,7 +13,90 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 
+// ==========================================
+// تحميل معلومات الموظف
+// ==========================================
 
+onAuthStateChanged(auth, async (user) => {
+
+    if (!user) return;
+
+    try {
+
+        const employeeRef =
+            ref(db, "employees/" + user.uid);
+
+        const snapshot =
+            await get(employeeRef);
+
+        if (!snapshot.exists()) {
+
+            console.log(
+                "لم يتم العثور على بيانات الموظف"
+            );
+
+            return;
+
+        }
+
+        const employee =
+            snapshot.val();
+
+        // الاسم
+
+        const nameElement =
+            document.getElementById("userName");
+
+        if (nameElement) {
+
+            nameElement.textContent =
+                employee.name || "موظف";
+
+        }
+
+
+        // الصلاحية
+
+        const roleElement =
+            document.getElementById("userRole");
+
+        if (roleElement) {
+
+            roleElement.textContent =
+                employee.role === "admin"
+                    ? "مدير"
+                    : "موظف";
+
+        }
+
+
+        // الصورة
+
+        const imageElement =
+            document.getElementById("userImage");
+
+
+        if (
+            imageElement &&
+            employee.image
+        ) {
+
+            imageElement.src =
+                employee.image;
+
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "خطأ تحميل بيانات الموظف:",
+            error
+        );
+
+    }
+
+});
 
 
 // اسم المستخدم في الهيدر
