@@ -1590,7 +1590,7 @@ async function finishRequest() {
     }
 
 
-    if (price <= 0) {
+    if (price <= ) {
 
         alert(
             "يرجى إدخال المبلغ"
