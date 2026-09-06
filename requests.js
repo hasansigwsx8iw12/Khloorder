@@ -2410,3 +2410,82 @@ function formatNumber(value) {
     );
 
 }
+// ==========================================
+// حذف الطلب - Admin فقط
+// ==========================================
+
+async function deleteRequest(id) {
+
+    // حماية إضافية
+    if (!isAdmin()) {
+
+        alert("❌ ليس لديك صلاحية حذف الطلب");
+
+        return;
+
+    }
+
+
+    const request =
+        allRequests[id];
+
+
+    if (!request) {
+
+        alert("الطلب غير موجود");
+
+        return;
+
+    }
+
+
+    const customerName =
+        request.name || "هذا الطلب";
+
+
+    const confirmed =
+        confirm(
+            `⚠️ هل أنت متأكد من حذف الطلب؟\n\n` +
+            `الزبون: ${customerName}\n\n` +
+            `سيتم حذف الطلب نهائياً.`
+        );
+
+
+    if (!confirmed) {
+
+        return;
+
+    }
+
+
+    try {
+
+        await remove(
+            ref(
+                db,
+                `requests/${id}`
+            )
+        );
+
+
+        alert("✅ تم حذف الطلب بنجاح");
+
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "❌ خطأ حذف الطلب:",
+            error
+        );
+
+
+        alert(
+            "حدث خطأ أثناء حذف الطلب:\n" +
+            error.message
+        );
+
+    }
+
+}
