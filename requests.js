@@ -10,7 +10,8 @@ import {
     ref,
     onValue,
     update,
-    push
+    push,
+    remove
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 import {
@@ -23,11 +24,8 @@ import {
 // ==========================================
 
 let currentUser = null;
-
 let allRequests = {};
-
 let currentFilter = "all";
-
 let selectedRequestId = null;
 
 
@@ -57,9 +55,7 @@ onAuthStateChanged(auth, (user) => {
 
 function isAdmin() {
 
-    return (
-        localStorage.getItem("role") === "admin"
-    );
+    return localStorage.getItem("role") === "admin";
 
 }
 
@@ -70,9 +66,7 @@ function isAdmin() {
 
 function loadRequests() {
 
-    const requestsRef =
-        ref(db, "requests");
-
+    const requestsRef = ref(db, "requests");
 
     onValue(
 
@@ -82,23 +76,17 @@ function loadRequests() {
 
             allRequests = {};
 
-
             if (snapshot.exists()) {
 
-                const data =
-                    snapshot.val() || {};
+                const data = snapshot.val() || {};
 
-
-                Object.entries(data)
-                    .forEach(([id, request]) => {
+                Object.entries(data).forEach(
+                    ([id, request]) => {
 
                         if (!request) return;
 
 
-                        // ==================================
                         // المدير يرى كل الطلبات
-                        // ==================================
-
                         if (isAdmin()) {
 
                             allRequests[id] = {
@@ -111,10 +99,7 @@ function loadRequests() {
                         }
 
 
-                        // ==================================
                         // الموظف يرى فقط الطلبات المكلف بها
-                        // ==================================
-
                         if (
 
                             request.assignedTo &&
@@ -127,17 +112,16 @@ function loadRequests() {
                             allRequests[id] = {
 
                                 ...request,
-
                                 id: id
 
                             };
 
                         }
 
-                    });
+                    }
+                );
 
             }
-
 
             renderRequests();
 
@@ -150,12 +134,10 @@ function loadRequests() {
                 error
             );
 
-
             const grid =
                 document.getElementById(
                     "requestsGrid"
                 );
-
 
             if (grid) {
 
@@ -193,44 +175,36 @@ function renderRequests() {
             "requestsGrid"
         );
 
-
     if (!grid) return;
 
 
     const requests =
 
-        Object.values(
-            allRequests || {}
-        )
+        Object.values(allRequests || {})
 
-        .sort(
+            .sort(
 
-            (a, b) =>
+                (a, b) =>
+                    (b.createdAt || 0) -
+                    (a.createdAt || 0)
 
-                (b.createdAt || 0) -
-                (a.createdAt || 0)
-
-        );
+            );
 
 
     updateStats(requests);
 
 
-    let filtered =
-        requests;
+    let filtered = requests;
 
 
     if (currentFilter !== "all") {
 
-        filtered =
-            requests.filter(
+        filtered = requests.filter(
 
-                request =>
+            request =>
+                request.status === currentFilter
 
-                    request.status ===
-                    currentFilter
-
-            );
+        );
 
     }
 
@@ -260,14 +234,8 @@ function renderRequests() {
 
         filtered
 
-            .map(
-
-                request =>
-
-                    createRequestBox(
-                        request
-                    )
-
+            .map(request =>
+                createRequestBox(request)
             )
 
             .join("");
@@ -290,25 +258,19 @@ function updateStats(requests) {
 
     const newCount =
         requests.filter(
-
             r => r.status === "new"
-
         ).length;
 
 
     const receivedCount =
         requests.filter(
-
             r => r.status === "received"
-
         ).length;
 
 
     const readyCount =
         requests.filter(
-
             r => r.status === "ready"
-
         ).length;
 
 
@@ -317,18 +279,15 @@ function updateStats(requests) {
         total
     );
 
-
     setText(
         "newRequests",
         newCount
     );
 
-
     setText(
         "receivedRequests",
         receivedCount
     );
-
 
     setText(
         "readyRequests",
@@ -347,7 +306,6 @@ function setText(id, value) {
     const element =
         document.getElementById(id);
 
-
     if (element) {
 
         element.textContent =
@@ -365,16 +323,16 @@ function setText(id, value) {
 function getTypeInfo(type) {
 
     if (
+
         type === "maintenance" ||
         type === "صيانة"
+
     ) {
 
         return {
 
             title: "صيانة",
-
-            icon:
-                "fa-screwdriver-wrench"
+            icon: "fa-screwdriver-wrench"
 
         };
 
@@ -382,16 +340,16 @@ function getTypeInfo(type) {
 
 
     if (
+
         type === "install" ||
         type === "تركيبة"
+
     ) {
 
         return {
 
             title: "تركيبة",
-
-            icon:
-                "fa-satellite-dish"
+            icon: "fa-satellite-dish"
 
         };
 
@@ -399,16 +357,16 @@ function getTypeInfo(type) {
 
 
     if (
+
         type === "transfer" ||
         type === "قلبة"
+
     ) {
 
         return {
 
             title: "قلبة",
-
-            icon:
-                "fa-right-left"
+            icon: "fa-right-left"
 
         };
 
@@ -418,9 +376,7 @@ function getTypeInfo(type) {
     return {
 
         title: "طلب",
-
-        icon:
-            "fa-file"
+        icon: "fa-file"
 
     };
 
@@ -437,11 +393,8 @@ function getStatusInfo(status) {
 
         return {
 
-            text:
-                "تم استلام الطلب",
-
-            className:
-                "received"
+            text: "تم استلام الطلب",
+            className: "received"
 
         };
 
@@ -452,11 +405,8 @@ function getStatusInfo(status) {
 
         return {
 
-            text:
-                "جاهز الطلب",
-
-            className:
-                "ready"
+            text: "جاهز الطلب",
+            className: "ready"
 
         };
 
@@ -465,11 +415,8 @@ function getStatusInfo(status) {
 
     return {
 
-        text:
-            "طلب جديد",
-
-        className:
-            ""
+        text: "طلب جديد",
+        className: ""
 
     };
 
@@ -483,15 +430,11 @@ function getStatusInfo(status) {
 function createRequestBox(request) {
 
     const type =
-        getTypeInfo(
-            request.type
-        );
+        getTypeInfo(request.type);
 
 
     const status =
-        getStatusInfo(
-            request.status
-        );
+        getStatusInfo(request.status);
 
 
     let html = `
@@ -513,7 +456,6 @@ function createRequestBox(request) {
 
                 </div>
 
-
                 <div
                     class="status ${status.className}"
                 >
@@ -534,9 +476,7 @@ function createRequestBox(request) {
                     </span>
 
                     <strong>
-                        ${escapeHtml(
-                            request.name
-                        )}
+                        ${escapeHtml(request.name)}
                     </strong>
 
                 </div>
@@ -549,9 +489,7 @@ function createRequestBox(request) {
                     </span>
 
                     <strong>
-                        ${escapeHtml(
-                            request.national
-                        )}
+                        ${escapeHtml(request.national)}
                     </strong>
 
                 </div>
@@ -564,9 +502,7 @@ function createRequestBox(request) {
                     </span>
 
                     <strong>
-                        ${escapeHtml(
-                            request.location
-                        )}
+                        ${escapeHtml(request.location)}
                     </strong>
 
                 </div>
@@ -579,9 +515,7 @@ function createRequestBox(request) {
                     </span>
 
                     <strong>
-                        ${escapeHtml(
-                            request.phone
-                        )}
+                        ${escapeHtml(request.phone)}
                     </strong>
 
                 </div>
@@ -632,7 +566,6 @@ function createRequestBox(request) {
     if (
 
         request.price !== undefined &&
-
         request.price !== null
 
     ) {
@@ -693,9 +626,7 @@ function createRequestBox(request) {
     // المكلف
     // ======================================
 
-    if (
-        request.assignedTo?.name
-    ) {
+    if (request.assignedTo?.name) {
 
         html += `
 
@@ -724,9 +655,7 @@ function createRequestBox(request) {
     // من استلم الطلب
     // ======================================
 
-    if (
-        request.receivedBy?.name
-    ) {
+    if (request.receivedBy?.name) {
 
         html += `
 
@@ -811,22 +740,14 @@ function createRequestBox(request) {
     // طلب جديد
     // ======================================
 
-    if (
-
-        request.status === "new"
-
-    ) {
+    if (request.status === "new") {
 
         html += `
 
             <button
-
                 class="receive-btn"
-
                 data-action="receive"
-
                 data-id="${escapeHtml(request.id)}"
-
             >
 
                 <i class="fa-solid fa-hand"></i>
@@ -844,22 +765,14 @@ function createRequestBox(request) {
     // تم الاستلام
     // ======================================
 
-    if (
-
-        request.status === "received"
-
-    ) {
+    if (request.status === "received") {
 
         html += `
 
             <button
-
                 class="ready-btn"
-
                 data-action="ready"
-
                 data-id="${escapeHtml(request.id)}"
-
             >
 
                 <i class="fa-solid fa-check"></i>
@@ -877,27 +790,49 @@ function createRequestBox(request) {
     // جاهز
     // ======================================
 
-    if (
-
-        request.status === "ready"
-
-    ) {
+    if (request.status === "ready") {
 
         html += `
 
             <button
-
                 class="details-btn"
-
                 data-action="details"
-
                 data-id="${escapeHtml(request.id)}"
-
             >
 
                 <i class="fa-solid fa-eye"></i>
 
                 عرض التفاصيل
+
+            </button>
+
+        `;
+
+    }
+
+
+    // ======================================
+    // حذف الطلب - Admin فقط
+    // ======================================
+
+    if (isAdmin()) {
+
+        html += `
+
+            <button
+                class="delete-btn"
+                data-action="delete"
+                data-id="${escapeHtml(request.id)}"
+                style="
+                    background:#ff6877;
+                    color:#fff;
+                    margin-top:8px;
+                "
+            >
+
+                <i class="fa-solid fa-trash"></i>
+
+                حذف الطلب
 
             </button>
 
@@ -928,16 +863,12 @@ function attachButtons() {
 
     document
 
-        .querySelectorAll(
-            "[data-action]"
-        )
+        .querySelectorAll("[data-action]")
 
         .forEach(button => {
 
             button.addEventListener(
-
                 "click",
-
                 () => {
 
                     const action =
@@ -948,37 +879,133 @@ function attachButtons() {
                         button.dataset.id;
 
 
-                    if (
-                        action === "receive"
-                    ) {
+                    if (action === "receive") {
 
                         receiveRequest(id);
 
                     }
 
 
-                    if (
-                        action === "ready"
-                    ) {
+                    if (action === "ready") {
 
                         openDetails(id);
 
                     }
 
 
-                    if (
-                        action === "details"
-                    ) {
+                    if (action === "details") {
 
                         showCompletedDetails(id);
 
                     }
 
-                }
 
+                    if (action === "delete") {
+
+                        deleteRequest(id);
+
+                    }
+
+                }
             );
 
         });
+
+}
+
+
+// ==========================================
+// حذف الطلب - Admin فقط
+// ==========================================
+
+async function deleteRequest(id) {
+
+    // حماية إضافية
+    if (!isAdmin()) {
+
+        alert(
+            "❌ ليس لديك صلاحية حذف الطلب"
+        );
+
+        return;
+
+    }
+
+
+    const request =
+        allRequests[id];
+
+
+    if (!request) {
+
+        alert(
+            "الطلب غير موجود"
+        );
+
+        return;
+
+    }
+
+
+    const customerName =
+        request.name || "هذا الطلب";
+
+
+    const confirmed =
+        confirm(
+
+            `⚠️ هل أنت متأكد من حذف الطلب؟\n\n` +
+
+            `الزبون: ${customerName}\n\n` +
+
+            `سيتم حذف الطلب نهائياً.`
+
+        );
+
+
+    if (!confirmed) {
+
+        return;
+
+    }
+
+
+    try {
+
+        await remove(
+
+            ref(
+                db,
+                `requests/${id}`
+            )
+
+        );
+
+
+        alert(
+            "✅ تم حذف الطلب بنجاح"
+        );
+
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "❌ خطأ حذف الطلب:",
+            error
+        );
+
+
+        alert(
+
+            "حدث خطأ أثناء حذف الطلب:\n" +
+
+            error.message
+
+        );
+
+    }
 
 }
 
@@ -1015,19 +1042,14 @@ async function receiveRequest(id) {
     }
 
 
-    if (
-        request.status !== "new"
-    ) {
+    if (request.status !== "new") {
 
         return;
 
     }
 
 
-    // ======================================
     // التأكد أن الموظف هو المكلف
-    // ======================================
-
     if (
 
         !isAdmin() &&
@@ -1105,7 +1127,6 @@ async function receiveRequest(id) {
         alert(
 
             "حدث خطأ أثناء استلام الطلب:\n" +
-
             error.message
 
         );
@@ -1163,11 +1184,13 @@ function openDetails(id) {
 
 
     if (
+
         !modal ||
         !title ||
         !sub ||
         !problemField ||
         !sectorField
+
     ) {
 
         console.error(
@@ -1185,10 +1208,7 @@ function openDetails(id) {
     }
 
 
-    // ======================================
     // حماية المكلف
-    // ======================================
-
     if (
 
         !isAdmin() &&
@@ -1323,21 +1343,24 @@ function openDetails(id) {
 
     if (signalInput) {
 
-        signalInput.value = "";
+        signalInput.value =
+            "";
 
     }
 
 
     if (towerInput) {
 
-        towerInput.value = "";
+        towerInput.value =
+            "";
 
     }
 
 
     if (sectorInput) {
 
-        sectorInput.value = "";
+        sectorInput.value =
+            "";
 
     }
 
@@ -1360,11 +1383,8 @@ document
     )
 
     ?.addEventListener(
-
         "click",
-
         closeModal
-
     );
 
 
@@ -1398,11 +1418,8 @@ document
     )
 
     ?.addEventListener(
-
         "click",
-
         finishRequest
-
     );
 
 
@@ -1435,9 +1452,7 @@ async function finishRequest() {
 
 
     const request =
-        allRequests[
-            selectedRequestId
-        ];
+        allRequests[selectedRequestId];
 
 
     if (!request) {
@@ -1451,10 +1466,7 @@ async function finishRequest() {
     }
 
 
-    // ======================================
     // حماية المكلف
-    // ======================================
-
     if (
 
         !isAdmin() &&
@@ -1510,11 +1522,8 @@ async function finishRequest() {
     if (
 
         !priceElement ||
-
         !signalElement ||
-
         !towerElement ||
-
         !sectorElement
 
     ) {
@@ -1539,19 +1548,13 @@ async function finishRequest() {
     // ======================================
 
     const problem =
-
         problemElement
-
             ? problemElement.value.trim()
-
             : "";
 
 
     const price =
-
-        Number(
-            priceElement.value
-        ) || 0;
+        Number(priceElement.value) || 0;
 
 
     const signal =
@@ -1673,7 +1676,8 @@ async function finishRequest() {
     // تحديد نوع السجل العربي
     // ======================================
 
-    let maintenanceType = "صيانة";
+    let maintenanceType =
+        "صيانة";
 
 
     if (
@@ -1739,23 +1743,17 @@ async function finishRequest() {
         problem:
 
             maintenanceType === "صيانة"
-
                 ? problem
-
                 : "",
-
 
         price:
             price,
 
-
         signal:
             signal,
 
-
         tower:
             tower,
-
 
         sector:
 
@@ -1763,11 +1761,8 @@ async function finishRequest() {
                 maintenanceType === "تركيبة" ||
                 maintenanceType === "قلبة"
             )
-
                 ? sector
-
                 : "",
-
 
         completedBy: {
 
@@ -1781,7 +1776,6 @@ async function finishRequest() {
                 employee.name
 
         },
-
 
         completedAt:
             now
@@ -1798,67 +1792,41 @@ async function finishRequest() {
         id:
             maintenanceId,
 
-
         requestId:
             selectedRequestId,
-
-
-        // ==================================
-        // النوع العربي
-        // ==================================
 
         type:
             maintenanceType,
 
-
-        // ==================================
-        // بيانات الزبون
-        // ==================================
-
         name:
             request.name || "",
-
 
         national:
             request.national || "",
 
-
         location:
             request.location || "",
-
 
         phone:
             request.phone || "",
 
-
-        // ==================================
-        // تفاصيل العملية
-        // ==================================
-
         problem:
 
             maintenanceType === "صيانة"
-
                 ? problem
-
                 : "",
-
 
         installType:
             request.installType || "",
 
-
         price:
             price,
-
 
         signal:
             signal,
 
-
         tower:
             tower,
-
 
         sector:
 
@@ -1866,109 +1834,68 @@ async function finishRequest() {
                 maintenanceType === "تركيبة" ||
                 maintenanceType === "قلبة"
             )
-
                 ? sector
-
                 : "",
-
 
         transfer:
             request.transfer || "",
 
-
         dish:
             request.dish === true,
-
 
         dishSignal:
             request.dishSignal || "",
 
-
-        // ==================================
-        // مقدم الطلب
-        // ==================================
-
         createdBy:
             request.createdBy || null,
-
 
         createdByName:
 
             request.createdBy?.name ||
-
             request.employee ||
-
             "غير معروف",
-
 
         createdByUid:
 
             request.createdBy?.uid ||
-
             request.uid ||
-
             "",
-
-
-        // ==================================
-        // المكلف
-        // ==================================
 
         assignedTo:
             request.assignedTo || null,
 
-
         assignedToName:
             request.assignedTo?.name || "",
-
 
         assignedToUid:
             request.assignedTo?.uid || "",
 
-
-        // ==================================
-        // الموظف المنفذ
-        // ==================================
-
         employee:
             employee.name,
-
 
         uid:
             employee.uid,
 
-
         email:
             employee.email,
-
 
         completedBy:
             employee.name,
 
-
         completedByUid:
             employee.uid,
 
-
         completedByEmail:
             employee.email,
-
-
-        // ==================================
-        // التاريخ
-        // ==================================
 
         date:
             new Date()
                 .toLocaleDateString("ar"),
 
-
         createdAt:
 
             request.createdAt ||
-
             now,
-
 
         completedAt:
             now
@@ -1986,23 +1913,19 @@ async function finishRequest() {
             "================================"
         );
 
-
         console.log(
             "🟢 بدء إنهاء الطلب"
         );
-
 
         console.log(
             "Request ID:",
             selectedRequestId
         );
 
-
         console.log(
             "Maintenance ID:",
             maintenanceId
         );
-
 
         console.log(
             "نوع العملية:",
@@ -2010,49 +1933,34 @@ async function finishRequest() {
         );
 
 
-        // ==================================
-        // تحديثات Firebase
-        // ==================================
-
         const updates = {};
 
 
-        // ----------------------------------
         // إضافة للسجل
-        // ----------------------------------
-
         updates[
             `maintenance/${maintenanceId}`
         ] =
             maintenanceData;
 
 
-        // ----------------------------------
         // تحديث الطلب
-        // ----------------------------------
-
         updates[
             `requests/${selectedRequestId}`
         ] = {
 
             ...request,
 
-
             status:
                 "ready",
-
 
             readyAt:
                 now,
 
-
             readyBy:
                 employee,
 
-
             execution:
                 execution,
-
 
             maintenanceId:
                 maintenanceId
@@ -2060,10 +1968,7 @@ async function finishRequest() {
         };
 
 
-        // ==================================
         // حفظ الكل
-        // ==================================
-
         await update(
             ref(db),
             updates
@@ -2074,10 +1979,6 @@ async function finishRequest() {
             "✅ تم حفظ الطلب والسجل بنجاح"
         );
 
-
-        // ==================================
-        // الرسالة
-        // ==================================
 
         let message =
             "✅ تم إنهاء الطلب بنجاح\n\n";
@@ -2124,29 +2025,24 @@ async function finishRequest() {
             "================================"
         );
 
-
         console.error(
             "❌ ERROR FINISH REQUEST"
         );
-
 
         console.error(
             "Code:",
             error.code
         );
 
-
         console.error(
             "Message:",
             error.message
         );
 
-
         console.error(
             "Full Error:",
             error
         );
-
 
         console.error(
             "================================"
@@ -2158,10 +2054,8 @@ async function finishRequest() {
 
 
         if (
-
             error.code ===
             "PERMISSION_DENIED"
-
         ) {
 
             message =
@@ -2232,34 +2126,34 @@ function showCompletedDetails(id) {
 
         `الزبون: ${request.name || ""}\n` +
 
-        `النوع: ${getTypeInfo(
-            request.type
-        ).title}\n` +
+        `النوع: ${
+            getTypeInfo(request.type).title
+        }\n` +
 
-        `المبلغ: ${execution.price || 0}\n` +
+        `المبلغ: ${
+            execution.price || 0
+        }\n` +
 
-        `الإشارة: ${execution.signal || ""}\n` +
+        `الإشارة: ${
+            execution.signal || ""
+        }\n` +
 
-        `برج الربط: ${execution.tower || ""}`;
+        `برج الربط: ${
+            execution.tower || ""
+        }`;
 
 
-    if (
-        execution.sector
-    ) {
+    if (execution.sector) {
 
         message +=
-
             `\nالسكتور: ${execution.sector}`;
 
     }
 
 
-    if (
-        execution.problem
-    ) {
+    if (execution.problem) {
 
         message +=
-
             `\nالمشكلة: ${execution.problem}`;
 
     }
@@ -2292,9 +2186,7 @@ function showCompletedDetails(id) {
 
 document
 
-    .querySelectorAll(
-        ".filter-btn"
-    )
+    .querySelectorAll(".filter-btn")
 
     .forEach(button => {
 
@@ -2344,11 +2236,8 @@ document
 function escapeHtml(value) {
 
     if (
-
         value === undefined ||
-
         value === null
-
     ) {
 
         return "";
@@ -2396,9 +2285,7 @@ function formatNumber(value) {
         Number(value);
 
 
-    if (
-        Number.isNaN(number)
-    ) {
+    if (Number.isNaN(number)) {
 
         return value;
 
@@ -2408,84 +2295,5 @@ function formatNumber(value) {
     return number.toLocaleString(
         "ar-SY"
     );
-
-}
-// ==========================================
-// حذف الطلب - Admin فقط
-// ==========================================
-
-async function deleteRequest(id) {
-
-    // حماية إضافية
-    if (!isAdmin()) {
-
-        alert("❌ ليس لديك صلاحية حذف الطلب");
-
-        return;
-
-    }
-
-
-    const request =
-        allRequests[id];
-
-
-    if (!request) {
-
-        alert("الطلب غير موجود");
-
-        return;
-
-    }
-
-
-    const customerName =
-        request.name || "هذا الطلب";
-
-
-    const confirmed =
-        confirm(
-            `⚠️ هل أنت متأكد من حذف الطلب؟\n\n` +
-            `الزبون: ${customerName}\n\n` +
-            `سيتم حذف الطلب نهائياً.`
-        );
-
-
-    if (!confirmed) {
-
-        return;
-
-    }
-
-
-    try {
-
-        await remove(
-            ref(
-                db,
-                `requests/${id}`
-            )
-        );
-
-
-        alert("✅ تم حذف الطلب بنجاح");
-
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "❌ خطأ حذف الطلب:",
-            error
-        );
-
-
-        alert(
-            "حدث خطأ أثناء حذف الطلب:\n" +
-            error.message
-        );
-
-    }
 
 }
